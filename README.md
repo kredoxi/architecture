@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://github.com/kredoxi/.github/tree/main/logos">
-    <img src="https://raw.githubusercontent.com/kredoxi/.github/main/logos/kredoxi_logo_optimized.png" alt="Kredoxi wordmark" width="240">
+    <img src="https://raw.githubusercontent.com/kredoxi/.github/main/logos/kredoxi_logo_optimized.png" alt="Kredoxi — Steal the config. Not the secret." width="240">
   </a>
 </p>
 
