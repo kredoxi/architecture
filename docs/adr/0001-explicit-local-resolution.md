@@ -2,9 +2,9 @@
 
 Date: 2026-10-31
 
-Status: **Proposed** — awaiting explicit Kredoxi owner acceptance. Core has
-implemented and tested a synthetic MVP, but implementation does not itself
-constitute architectural acceptance.
+Status: **Accepted** — explicitly accepted by the Kredoxi owner on 2026-10-31.
+This decision authorizes the documented synthetic MVP architecture only; it
+does not authorize production use, relaxed controls or scope expansion.
 
 ## Context
 
@@ -14,7 +14,7 @@ interpret Kredoxi URIs. [Mechanism research](../mechanisms.md) shows that hooks,
 loaders, VFS and proxies affect only specific operations, with platform and
 failure risks. OS enforcement is not provided by a user-mode daemon alone.
 
-## Proposed decision
+## Decision
 
 Use Go and its standard library for an explicit resolver client and local
 loopback IPv4 HTTPS broker using mutually authenticated TLS 1.3. Bind
@@ -57,13 +57,16 @@ copies and consumer memory contain values; outages are explicit. No root/admin
 tamper prevention, per-executable identity or production key lifecycle is
 claimed.
 
-Core implements policy-before-provider lookup. An unallowlisted reference
-returns `policy_denied` without querying the provider, so an authenticated
-caller not permitted for that reference cannot enumerate its provider
-existence. An allowlisted reference absent from the synthetic provider returns
+Core uses a policy-before-provider ordering: it authenticates the client
+certificate before handling the request and checks the exact
+principal/reference allowlist before provider lookup. An
+unauthorised principal receives `policy_denied` without a provider query, so
+cannot distinguish an existing credential from a nonexistent one. An
+allowlisted reference absent from the synthetic provider returns
 `secret_not_found`; existence is distinguishable to that already-authorised
-principal. This is the current tested contract, not an indistinguishable-error
-guarantee. See [contracts](../contracts.md) for exact status semantics and the
+principal. The owner accepts this scoped disclosure boundary. Wildcard
+authorisation, reference listing and unauthorised provider probing are
+prohibited. See [contracts](../contracts.md) for exact status semantics and the
 information tradeoff.
 
 The pinned [Core protocol source](https://github.com/kredoxi/kredoxi/blob/1896d0c25ca0efca7790f671a8de3c654eb49bc0/docs/protocol.md)
@@ -82,7 +85,9 @@ Any compatibility/security shift needs its own ADR and adversarial tests.
 
 ## Acceptance
 
-Architectural acceptance is an owner decision. Keep this ADR Proposed and the
-PR unmerged until the owner explicitly accepts this recommendation. On
-acceptance, update the status to Accepted and merge in the separately approved
-review action; implementation evidence alone is not consent.
+The owner explicitly accepted this ADR and the documented 403/503 disclosure
+tradeoff on 2026-10-31, conditional on authentication and exact-reference
+authorisation preceding every provider lookup. The Architecture PR remains open
+and unmerged until its CI and remaining review gates pass. This ADR acceptance
+does not approve production use, a licence, relaxed security controls or MVP
+scope expansion.

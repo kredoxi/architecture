@@ -116,8 +116,9 @@ Policy is an immutable startup snapshot. Implemented format:
 
 Resolution is the sole operation; there is no action or provider-mapping field
 in this policy. Exact allowlisted reference strings are matched for the enrolled
-principal. No wildcards, prefix match, regex, inherited grants or client-selected
-provider/endpoint.
+principal. The broker must successfully authenticate the client and authorize
+the exact principal/reference pair before it calls a provider. No wildcards,
+prefix match, regex, inherited grants or client-selected provider/endpoint.
 No wildcard/default allow is configured. Core allows at most 32 principals and
 64 references per principal and rejects duplicates. No match is denial and
 returns no value without invoking the provider. The demo verifies a SHA-256

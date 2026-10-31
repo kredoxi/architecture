@@ -324,7 +324,7 @@ def validate_core_contract(core: str, contracts: str, adr: str) -> None:
         raise ValueError("Architecture event status set diverges from Core")
     require_contains(
         adr,
-        {"Status: **Proposed**", "policy-before-provider", "policy_denied", "secret_not_found"},
+        {"Status: **Accepted**", "policy-before-provider", "policy_denied", "secret_not_found"},
         "ADR acceptance and enumeration decision",
     )
 

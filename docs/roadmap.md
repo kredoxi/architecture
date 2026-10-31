@@ -48,8 +48,9 @@ standard library for focused contract/example/grammar/link/secret/hygiene checks
 It reconciles the Core protocol where available. It uses no application
 credentials, privileged execution or production provider.
 
-Do not configure the check as required until it succeeds and its exact GitHub
-check identity has been verified. This PR does not change repository rulesets.
+The `validate` job identity and a successful run have been verified. This PR
+does not configure the check as required or change repository rulesets; any
+ruleset update is a separate owner decision.
 For the core repo require build, unit/integration/adversarial
 tests, race where supported, lint/vet/static/dependency vulnerability checks,
 secret scanning and artefact integrity.

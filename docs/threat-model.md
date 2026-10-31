@@ -30,7 +30,7 @@ does not recognise malicious intent.
 | Attack path | Capability | Control/evidence gate | Residual risk |
 | --- | --- | --- | --- |
 | Source/config disclosure | Tier 1 | Scan consumer artefacts, T01 | Reference metadata and public synthetic fixtures remain visible |
-| Reference replay/enumeration | Tiers 1-2 | mTLS and exact allowlist before provider lookup, T03/T04/T13/T21 | Unallowlisted caller cannot enumerate provider existence; allowlisted caller can distinguish absent provider entry via `secret_not_found` |
+| Reference replay/enumeration | Tiers 1-2 | Authenticate first; exact principal/reference allowlist before provider lookup, T03/T04/T13/T21 | Unauthenticated or unallowlisted callers cannot distinguish existing from nonexistent provider entries; an allowlisted caller can distinguish absence via `secret_not_found` |
 | Stolen tokens/enrollment keys | Tiers 2-4 | Protected short-lived enrollment; future revocation | Key possession works until effective expiry/revocation |
 | Asserted identity/PID reuse | Tier 2 | Transport-derived identity, reject body claims, T09 | Certificate is not OS/executable attestation |
 | IPC abuse/cross-client confusion | Tier 2 | Authentication, generated IDs, limits, isolated buffers, T07/T12 | Local resource exhaustion remains possible |
@@ -66,3 +66,11 @@ authorised enrolled identity cannot resolve its reference. The
 [test strategy](testing.md) defines proof gates; this repository does not claim
 they have run. Parser unit tests do not establish process isolation, runtime
 exfiltration prevention or privileged tamper resistance.
+
+The owner accepted the scoped enumeration boundary in ADR 0001: authentication
+and exact-reference authorisation must succeed before any provider lookup.
+Unallowlisted principals receive `policy_denied` for both present and absent
+references; only a principal already allowed a reference can observe
+`secret_not_found`. No wildcard grants, reference listing or unauthorised
+provider probes are permitted. Certificate possession remains key-holder
+identity, not executable identity.

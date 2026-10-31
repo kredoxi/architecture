@@ -75,13 +75,12 @@ boundaries/tool policy and effective non-overridden packs before execution.
 
 ## Remaining controls
 
-The `Architecture validation` workflow is proposed in this PR. It explicitly
-uses `contents: read`, immutable-pinned checkout, checksummed cARL 1.0.2 and
-standard-library Python validation. Its exact GitHub check identity must be
-observed on a successful run before anyone configures it as required. This PR
-does not change rulesets or claim they exist. Organization security settings,
-dependency alerts or release workflows are not configured here. Verify live
-settings separately; do not report recommendations as enabled.
+The `Architecture validation` workflow uses `contents: read`,
+immutable-pinned checkout, checksummed cARL 1.0.2 and standard-library Python
+validation. Its `validate` job has completed successfully on the open PR. This
+PR does not configure it as a required check or change rulesets. Organization
+security settings, dependency alerts or release workflows are not configured
+here. Verify live settings separately; do not report recommendations as enabled.
 Licence/redistribution review remains open.
 
 Core provider/event/resource contracts were reconciled against the Core
