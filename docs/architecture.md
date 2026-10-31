@@ -31,6 +31,11 @@ This is a proposed system, not components implemented in this repository.
 A stopped process cannot reliably report its own termination; health monitoring
 requires an observer with an independent lifecycle.
 
+The [contracts](contracts.md) distinguish the core session's reported MVP
+grammar/wire/policy from future provider and deployment hardening. The lifecycle
+below describes security requirements; do not infer that its every step is
+implemented or that durable event storage exists in the memory-only demo.
+
 | Component | Responsibility | Prohibited behaviour |
 | --- | --- | --- |
 | Parser | Whole-string canonical validation | Repair ambiguous or encoded input |
@@ -118,6 +123,10 @@ trusted verification key. A signature alone does not stop rollback of an older
 signed revision; anti-rollback needs an operator-controlled monotonic floor or
 external authority. Neither privileged anti-rollback nor signed-policy
 enforcement is claimed here.
+
+The synthetic demo's independent compiled policy pin is SHA-256 over
+`json.Compact` bytes. It is a bounded integrity demonstration under an intact
+binary, not an operator enrollment/update system or privileged anti-rollback.
 
 For a synthetic demo, broker and client can share a developer account. This
 demonstrates protocol authorisation, not same-user isolation. Real-secret

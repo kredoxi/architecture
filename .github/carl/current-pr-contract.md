@@ -1,7 +1,8 @@
 # Architecture baseline PR contract
 
-Status: approved for assisted execution by the user's execution brief and retry;
-closed as historical scope when the validated baseline PR is published.
+Status: approved for assisted execution by the user's execution brief and retry,
+including core-contract reconciliation; closes as historical scope when the
+validated, reconciled baseline PR revision is published.
 
 ## Goal and approved scope
 

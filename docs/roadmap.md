@@ -4,8 +4,8 @@
 
 | Surface | Current evidence | Proposed/required next gate |
 | --- | --- | --- |
-| Architecture documents | Documentation baseline | Review contracts and reconcile core implementation |
-| Go explicit resolver/mTLS | Chosen design; no runtime result established here | Core synthetic demo, TLS negative tests and adversarial matrix |
+| Architecture documents | Grammar/wire/policy reconciled to core session report | Review evolving contracts against core test evidence |
+| Go explicit resolver/mTLS | Core session reports working demo/tests; not executed here | Publish reproducible core evidence and adversarial matrix |
 | Windows | Documentation/governance prepared on Windows | Build/run actual consumer/broker; cert/filesystem/permission tests |
 | Linux | IPC/loader mechanism research only | Actual runtime tests; separate SO_PEERCRED/pathname socket adapter |
 | macOS | Go transport portability is a design expectation | Runtime compatibility, cert/filesystem checks; separate native IPC research |

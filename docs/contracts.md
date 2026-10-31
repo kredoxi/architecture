@@ -1,10 +1,10 @@
 # Reference, identity, provider and runtime contracts
 
-**Status:** v1 design baseline, not a claim that these fields/interfaces exist in
-the core implementation. The cross-repository agreement is Go explicit
-resolution, loopback TLS 1.3 mTLS, exact-reference policy, synthetic memory
-provider, the reference and principal examples below. Wire/event/provider
-details require reconciliation with implementation before declaring conformance.
+**Status:** grammar, request/response and policy below are reconciled to the core
+MVP implementation session's reported contract on 2026-10-31. Runtime test
+results remain core-repository evidence, not tests executed here. Requirements
+for production providers and additional hardening are identified separately.
+No compatibility baseline existed before this initial reconciliation.
 
 ## Reference grammar v1
 
@@ -15,29 +15,30 @@ DATABASE_PASSWORD=kredoxi://v1/demo/example/password
 ```
 
 The namespace `demo` is a logical policy namespace, not a vault hostname.
-`example` is a logical resource, `password` a field. Only the operator's mapping
-selects providers and underlying provider identifiers. References contain no
+`example` is a logical resource, `password` a field. The MVP uses the configured
+synthetic provider; future operator-owned mappings may select providers.
+References contain no
 credential, broker endpoint, cloud token or access authority.
 
 ABNF-style grammar (quoted literals are case-sensitive):
 
 ```text
 reference = %s"kredoxi://v1/" segment "/" segment "/" segment
-segment   = lower [*61(tail) final]
+segment   = lower *31(tail)
 lower     = %x61-7A
 digit     = %x30-39
 tail      = lower / digit / "-"
-final     = lower / digit
 ```
 
 The equivalent segment regex is:
 
 ```text
-[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?
+[a-z][a-z0-9-]{0,31}
 ```
 
-Segments are 1-63 ASCII bytes, start with a letter, end in a letter/digit and
-allow interior hyphens. The whole reference is at most 204 ASCII bytes.
+Segments are 1-32 ASCII bytes, start with a lowercase letter and allow subsequent
+lowercase letters, digits and hyphens, including a trailing hyphen.
+The whole reference is at most 111 ASCII bytes.
 Exactly three nonempty path segments follow the version authority. The parser
 must consume the whole input: no trimming, substring detection or interpolation.
 Reject uppercase, Unicode, controls, percent encoding (including double
@@ -55,6 +56,7 @@ No scheme registration with the OS or public URI registry is implied.
 | --- | --- |
 | `kredoxi://v1/demo/example/password` | Valid canonical reference |
 | `kredoxi://v1/a/b/c` | Valid minimum segments |
+| `kredoxi://v1/a/b/c-` | Valid trailing hyphen |
 | `kredoxi://v1/demo/example/password?version=2` | Reject query |
 | `kredoxi://v1/demo/../password` | Reject traversal |
 | `kredoxi://v1/demo/%65xample/password` | Reject encoding |
@@ -77,8 +79,9 @@ URI SAN:
 urn:kredoxi:principal:demo-consumer
 ```
 
-Principal suffixes use the segment rule above; compare the complete canonical
-URI, not display names/CN or substrings. Verify the trusted issuer chain,
+Compare the complete enrolled URI, not display names/CN or substrings.
+Do not infer a reference-segment grammar for all future principal identifiers.
+Verify the trusted issuer chain,
 validity window, client-auth EKU and enrolled principal. Reject missing,
 ambiguous/multiple accepted principal SANs or malformed identity. Successful TLS
 authentication does not imply authorisation.
@@ -96,37 +99,36 @@ Broker/private provider credentials are separate from consumer credentials.
 Control-plane policy/enrollment changes are offline operator actions, not
 `resolve` permissions.
 
-Policy is an immutable schema-valid startup snapshot. Proposed example:
+Policy is an immutable startup snapshot. Implemented format:
 
 ```json
 {
-  "schema_version": 1,
-  "revision": 1,
-  "allow": [
-    {
-      "principal": "urn:kredoxi:principal:demo-consumer",
-      "action": "resolve",
-      "reference": "kredoxi://v1/demo/example/password"
-    }
-  ],
-  "mappings": [
-    {
-      "reference": "kredoxi://v1/demo/example/password",
-      "provider": "synthetic",
-      "key": "demo-example-password"
-    }
-  ]
+  "version": 1,
+  "allow": {
+    "urn:kredoxi:principal:demo-consumer": [
+      "kredoxi://v1/demo/example/password"
+    ]
+  }
 }
 ```
 
-Reject unknown fields, duplicate JSON keys/rules/mappings, invalid references,
-unsupported schema/actions and missing referenced providers. No wildcards,
-prefix match, regex, inherited grants or client-selected provider/endpoint.
+Resolution is the sole operation; there is no action or provider-mapping field
+in this policy. Exact allowlisted reference strings are matched for the enrolled
+principal. No wildcards, prefix match, regex, inherited grants or client-selected
+provider/endpoint.
 No match is denial; authenticated-but-disallowed returns no value and does not
 invoke the provider. Unknown and denied references have the same public error
 category to limit enumeration; restricted events can distinguish categories.
-Changing policy requires validated restart. Revision is provenance, not a
-trusted monotonic anti-rollback control.
+The demo verifies a SHA-256 policy pin independently compiled into its trusted
+binary, computed over bytes produced by `json.Compact`. This removes insignificant
+JSON whitespace but does not sort keys; key ordering still affects the pin.
+It detects changes relative to that demo trust anchor, not replacement of the
+binary itself. Version denotes policy format, not a monotonic revision.
+Changing policy requires validated restart and a corresponding trusted pin.
+Production signature/anti-rollback enforcement is not implemented.
+
+Additional schema hardening requires rejection of duplicate/unknown fields and
+malformed rules; do not infer those tests solely from successful pin validation.
 
 Production enrollment, certificate renewal/revocation and separation of service
 accounts require a later decision. Short-lived certs reduce, not eliminate,
@@ -135,7 +137,8 @@ including persistent connections; previous authorisation cannot be cached.
 
 ## Provider contract
 
-Proposed Go interface, separate from any concrete implementation package:
+Future provider-neutral interface proposal, not a claim about the concrete
+MVP package or its current return type:
 
 ```go
 type Provider interface {
@@ -157,7 +160,8 @@ means the provider declares no expiry, not permission to cache forever.
 Version is non-secret opaque provenance; no enumeration/write/delete/list API
 is exposed to consumers.
 
-Reject empty or oversized values (MVP cap 16 KiB), expired values, invalid
+Future adapters must reject empty or oversized values (initial design target
+16 KiB), expired values, invalid
 version metadata and unavailable providers explicitly. Provider errors use
 typed categories such as `not_found`, `unavailable`, `timeout`, `invalid_value`
 and `internal`; the broker never forwards raw backend errors. Clear owned
@@ -171,7 +175,7 @@ rotation, cancellation and dependency/licensing review before activation.
 
 ## Runtime contract
 
-Proposed API: `POST /v1/resolve` on an operator-enrolled literal loopback
+Implemented API: `POST /v1/resolve` on an operator-enrolled loopback
 endpoint. Verify loopback at bind/connect, not just an untrusted hostname.
 No public listener, redirects, proxy-environment discovery, endpoint supplied
 by reference, insecure HTTP fallback, batch resolve, list or write operation.
@@ -179,26 +183,28 @@ by reference, insecure HTTP fallback, batch resolve, list or write operation.
 Request (`Content-Type: application/json`):
 
 ```json
-{"schema_version":1,"reference":"kredoxi://v1/demo/example/password"}
+{"reference":"kredoxi://v1/demo/example/password"}
 ```
 
-Reject unsupported methods/paths, content encoding, unknown or duplicate
-fields, invalid UTF-8, malformed JSON, multiple JSON values and unsupported
-schema. A body cannot declare principal identity. Server generates its own
-request identifier; unauthenticated clients fail before provider access.
+The request has exactly `reference`, with no body schema_version or principal
+claim. `/v1/resolve` versions the protocol. Server-generated request IDs correlate
+events/responses; unauthenticated clients cannot access the provider.
+Strict input hardening must reject unsupported methods/paths/content encoding,
+unknown or duplicate fields, invalid UTF-8/JSON and trailing values; the
+core-repository test evidence establishes which checks are implemented.
 
-Success fields: `schema_version` (1), `request_id` (opaque server identifier),
-`value_base64` (encoded provider bytes), `version` (opaque provider version),
-`expires_at` (UTC RFC3339 or null). Base64 is a wire encoding, not encryption
-or a safe-to-log value. Response bytes are secret-bearing and must never appear
-in logs, caches, error diagnostics or screenshots. Clients validate bounded
-base64, expected schema and expiry before use.
+Implemented response fields are `value`, `error` and `request_id`. `value` and
+`error` have omitempty semantics: success includes value; failure includes error
+and must omit value. The synthetic demo value is a generated 64-character hex
+string, not a base64 field. It is secret-bearing test data and must never appear
+in diagnostics. No response schema_version, provider version or expiry field
+is currently reported; those require future explicit protocol evolution.
 
-Failure fields: `schema_version`, `request_id`, `error` (fixed category).
-No plaintext body, raw provider detail, parsed arbitrary input or certificate
-dump is returned.
+Failure responses must contain no resolved value, raw provider detail, arbitrary
+input echo or certificate dump. An encoded secret is still a secret; neither
+hex nor any future base64 representation is safe to log.
 
-| Outcome | Proposed HTTP status/category |
+| Outcome | Future hardening target, not confirmed current status table |
 | --- | --- |
 | Malformed input/schema/reference | 400 / `invalid_request` |
 | Authenticated denied or unknown reference | 403 / `access_denied` |
@@ -209,18 +215,20 @@ dump is returned.
 | Provider deadline | 504 / `timeout` |
 | Internal non-secret failure | 500 / `internal` |
 
-All responses disable caching with `Cache-Control: no-store`. MVP limits are
+No caching is implemented. Response `Cache-Control: no-store` is a transport
+hardening requirement. Unconfirmed initial resource targets are
 4 KiB request bodies, 16 KiB raw secret values, 32 active requests, 10-second
 total request/write deadline and a 5-second provider deadline within it.
-Apply an enrolled-principal rate limit (initial target 10 requests/second,
-burst 20), plus unauthenticated connection limits. These are design targets,
+An enrolled-principal rate limit target is 10 requests/second,
+burst 20, plus unauthenticated connection limits. These are design targets,
 not benchmarks or implemented-limit claims. Bound TLS handshake/header reads
 and reject excess work without spawning unbounded goroutines.
 
 ## Event contract v1
 
 Use structured local JSON events with OS-native sinks/EDR collection as future
-adapters, not a mandatory proprietary backend. Proposed decision example:
+adapters, not a mandatory proprietary backend. Illustrative event schema
+pending exact field-name alignment beyond the confirmed schema_version:
 
 ```json
 {
@@ -229,9 +237,8 @@ adapters, not a mandatory proprietary backend. Proposed decision example:
   "event_type": "resolution_decision",
   "request_id": "demo-request-001",
   "principal_id": "demo-enrolled-consumer",
-  "authentication_method": "mtls",
+  "authentication_method": "mtls-uri-san",
   "reference_id": "demo-ref-001",
-  "policy_revision": 1,
   "decision": "allow",
   "provider_id": "synthetic",
   "status": "authorised",
@@ -241,11 +248,17 @@ adapters, not a mandatory proprietary backend. Proposed decision example:
 }
 ```
 
-Event types include decision, release attempt, resolution failure and health.
-IDs above are public example aliases, not hashes of secrets. Use operator-owned
-opaque aliases in the MVP. If a later sink uses HMAC pseudonyms, its separate
-protected telemetry key needs rotation and lifecycle design. Bare hashes of
-guessable reference names are vulnerable to dictionary recovery.
+The MVP emits schema_version 1 events with keyed per-run principal/reference
+pseudonyms, `mtls-uri-san` authentication, decision, synthetic provider,
+status/error/category/version/mode. IDs above are illustrative aliases, not
+literal emitted pseudonyms or hashes of secrets. Per-run keys make cross-run
+correlation intentionally unstable; stable operational pseudonyms need a
+separate protected telemetry-key lifecycle. Bare hashes of guessable reference
+names are vulnerable to dictionary recovery.
+
+The core `resolved` status denotes an audited release attempt, not client
+receipt or application use. A future independently managed observer is required
+to report process termination reliably.
 
 Unauthenticated/malformed requests omit identity/reference/provider when
 unavailable; do not fabricate them. Unknown/unbounded input is never echoed.

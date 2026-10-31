@@ -41,7 +41,7 @@ does not recognise malicious intent.
 | Binary replacement/hook bypass | Tiers 2-4 | Future protected install/integrity evidence, T14/T15 | User-mode integration is bypassable by its application or privileged attacker |
 | Configuration/provider redirection | Tier 2 | Operator mappings and enrolled server trust, T18 | Trusted operator/compromised broker can redirect |
 | Symlink/reparse/TOCTOU | Tier 2 | Open-once snapshot, object/parent ACL validation, T18 | Checks require OS implementation; privileged races out of guarantee |
-| Policy tamper/rollback/downgrade | Tiers 2-4 | Validated immutable snapshot, no permissive defaults, T15 | Validation is not signature trust or anti-rollback |
+| Policy tamper/rollback/downgrade | Tiers 2-4 | Immutable snapshot and demo independently compiled compact-JSON SHA-256 pin, T15 | Intact binary required; not production signature trust or anti-rollback |
 | Provider compromise | Trusted dependency compromised | Least privilege, output limits and redacted errors, T05/T19 | Provider knows values and can return malicious/stale data |
 | Log/diagnostic leakage | Tiers 1-4 | Schema allowlist, pseudonyms, no bodies/raw errors, T11 | Caller/provider may log independently; OS dumps need deployment controls |
 | Kredoxi supply-chain compromise | Build/install authority | Review, dependency checks, verified pinned tooling, release gate | A trusted malicious build can bypass user-mode controls |

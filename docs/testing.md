@@ -48,8 +48,8 @@ artefacts. Printed output can say an operation succeeded, not print its value.
 | T19 | Rotation/cache/expiry | New request sees new provider version; expired/empty/oversized/shared-buffer values rejected; old delivered bytes cannot be recalled |
 | T20 | DoS/slow client/provider/sink | Test exact size/concurrency/rate/deadline targets; bounded goroutines and cancellation; recovery after saturation |
 
-Fuzz reference and strict request parsing; include exact 1/63/64-byte segment
-boundaries, 204-byte whole-reference cap and wire value limits. Unit tests alone
+Fuzz reference and strict request parsing; include exact 1/32/33-byte segment
+boundaries, 111-byte whole-reference cap and wire value limits. Unit tests alone
 do not prove OS isolation. Integration tests must cross the actual TLS boundary
 and count provider calls for denied requests.
 

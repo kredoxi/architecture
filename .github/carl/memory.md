@@ -53,9 +53,14 @@ No licence, production encrypted vault, release-signing policy, OS tamper
 enforcement or production credential enrollment has been approved. Compare
 options, record limits and request approval before introducing them.
 
-Wire/provider contract examples are a design baseline until core implementation
-confirms them; reconcile cross-repository drift explicitly rather than reporting
-unsupported fields or security properties as implemented.
+Grammar/wire/policy are reconciled to the core session's reported MVP baseline:
+three 1-32-byte ASCII segments, lowercase letter first and lowercase/digit/hyphen
+afterward (trailing hyphen allowed); POST /v1/resolve with exactly reference;
+response value/error/request_id, omitting empty value/error; policy version 1
+with principal-to-exact-reference allowlists and an independent compiled
+compact-JSON SHA-256 demo pin. Pin validation is not privileged anti-rollback.
+Future provider lifecycle and additional hardening remain proposals. Reconcile
+cross-repository drift without claiming unexecuted tests or unsupported fields.
 
 <!-- BEGIN GENERATED: reconcile -->
 ## Repository snapshot
