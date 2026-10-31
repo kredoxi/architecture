@@ -74,3 +74,30 @@ references; only a principal already allowed a reference can observe
 `secret_not_found`. No wildcard grants, reference listing or unauthorised
 provider probes are permitted. Certificate possession remains key-holder
 identity, not executable identity.
+
+## Native IPC identity limits (research only)
+
+Linux `SO_PEERCRED` can provide connection-time PID/real UID/real GID for
+connected AF_UNIX sockets, while pathname socket permissions can enforce a
+filesystem account/group boundary on Linux. Abstract sockets have no
+filesystem ACL. Numeric PID follow-up can race with process exit and PID reuse;
+neither PID nor UID/GID proves executable integrity. systemd sandboxing can
+reduce broker privilege and filesystem reach, but is host-dependent and does
+not authenticate IPC clients.
+
+Windows named-pipe DACLs enforce access using caller access tokens, and pipe
+impersonation can expose a client security context for authorization-sensitive
+operations. The server must fail closed if impersonation fails. A service SID
+can scope access to service-owned objects, but is not executable identity.
+`GetNamedPipeClientProcessId` returns a PID, not a stable executable proof.
+Pipe defaults are not least-privilege; specify and verify a DACL. Protected
+services are an anti-malware-specific mechanism with ELAM/signing
+prerequisites, not a generally available Kredoxi control.
+
+These are source-backed capabilities, not controls implemented or tested here.
+Distinct-account and IPC endpoint tests require disposable authorized
+infrastructure; this repository has not run them. Neither OS peer credentials
+nor mTLS prevents a compromised authorized consumer from reading its own
+resolved secret from memory. See [Proposed ADR 0002](adr/0002-native-ipc-identity-evaluation.md)
+and the [test strategy](testing.md) for the open transport alternatives and
+evidence gates.

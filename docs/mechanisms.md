@@ -25,6 +25,16 @@ code. A placeholder does not become a secret merely because a daemon exists.
 | [S8: Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/) | Secrets project into files/environment; storage is not encrypted by default; volume updates are eventual and subPath mounts do not automatically update |
 | [S9: systemd.exec](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html) | Sandboxing is host/capability dependent; read-only filesystem settings do not prohibit AF_UNIX communication |
 | [S10: Go crypto/tls](https://pkg.go.dev/crypto/tls) | Standard-library TLS supports client-certificate authentication and TLS 1.3 |
+| [S11: Linux unix(7)](https://man7.org/linux/man-pages/man7/unix.7.html) | Linux pathname AF_UNIX sockets have filesystem permissions; abstract sockets do not; SO_PEERCRED reports PID/real UID/GID at connection setup |
+| [S12: Linux pidfd_open(2)](https://man7.org/linux/man-pages/man2/pidfd_open.2.html) | A pidfd can refer to and monitor a process lifetime; obtaining one from a previously observed numeric PID still needs race analysis |
+| [S13: Microsoft named-pipe security](https://learn.microsoft.com/en-us/windows/win32/ipc/named-pipe-security-and-access-rights) | DACLs govern pipe access; the documented default grants broad read access |
+| [S14: Microsoft pipe impersonation](https://learn.microsoft.com/en-us/windows/win32/api/namedpipeapi/nf-namedpipeapi-impersonatenamedpipeclient) | Impersonation uses the context of the last pipe message read; failure must not fall through to privileged broker authority |
+| [S15: Microsoft process ID API](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getnamedpipeclientprocessid) | Named-pipe API returns a numeric client PID, not image attestation |
+| [S16: Microsoft access tokens and service SID](https://learn.microsoft.com/en-us/windows/win32/secauthz/access-tokens) | Windows tokens contain user/group SIDs and privileges; see also [SERVICE_SID_INFO](https://learn.microsoft.com/en-us/windows/win32/api/winsvc/ns-winsvc-service_sid_info) |
+| [S17: Microsoft protected anti-malware services](https://learn.microsoft.com/en-us/windows/win32/services/protecting-anti-malware-services-) | Protected services require ELAM and prescribed signing; this is not a general Kredoxi service option |
+| [S18: RFC 8446](https://www.rfc-editor.org/rfc/rfc8446) | TLS 1.3 protects application traffic against eavesdropping, tampering and message forgery when correctly configured |
+| [S19: journald, Event Log and ETW](https://www.freedesktop.org/software/systemd/man/latest/systemd.journal-fields.html) ([Windows Event Log](https://learn.microsoft.com/en-us/windows/win32/eventlog/about-event-logging), [ETW](https://learn.microsoft.com/en-us/windows/win32/etw/about-event-tracing)) | Platform collectors can attach origin metadata or collect events; this does not prove application credential consumption or SIEM receipt |
+| [S20: The Update Framework](https://theupdateframework.github.io/specification/latest/) | Software-update threats include rollback and freeze attacks, which require more than a content digest |
 
 S1/S2 were read as upstream manual source (including an older documented
 snapshot), not evidence of a specific installed Linux distribution. S3/S7 were
@@ -88,3 +98,8 @@ authenticated protocol proxy. Loader/hook/VFS/driver experiments require a
 named application/platform matrix covering short reads, mmap, caching,
 reentrancy, async operations, bypass and daemon loss. Never generalise from one
 successful hooked API call to universal substitution.
+
+The detailed Linux/Windows peer-identity research, mTLS comparison, telemetry
+ingestion limits and anti-tamper proof gates are recorded in
+[Proposed ADR 0002](adr/0002-native-ipc-identity-evaluation.md). Its status is
+decision deferred; no transport or OS identity model has been selected.

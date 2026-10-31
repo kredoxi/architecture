@@ -64,6 +64,12 @@ A principal's permission is checked before exercising the broker's stronger
 provider access, preventing an intentional credential-oracle/confused-deputy
 design.
 
+Linux Unix-domain sockets and Windows named pipes are under evaluation as
+possible local transports; neither is selected or implemented. See the
+[Proposed ADR 0002](adr/0002-native-ipc-identity-evaluation.md) for distinctions
+between certificate key possession, OS account/token identity, process identity
+and executable integrity. ADR 0001 remains the accepted mTLS baseline.
+
 ## Resolution lifecycle
 
 1. Validate local endpoint, TLS enrollment, immutable policy/mappings and event
