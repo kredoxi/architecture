@@ -102,9 +102,12 @@ disclosure. Certificate expiry must be enforced per request on long-lived
 connections or connections made short-lived; handshake-time validation alone
 does not revoke an existing connection.
 
-Deadlines cover provider execution and response writing. Bound goroutines and
+Deadlines bound response writing and cooperative provider execution. The current
+trusted synchronous synthetic provider honours deadlines, but context cancellation
+cannot forcibly preempt an arbitrary blocking provider. Bound goroutines and
 release concurrency slots on cancellation. A provider that ignores cancellation
-is not eligible for the contract. Retry is a new authorised, observable request;
+is not eligible without separately bounded process isolation.
+Retry is a new authorised, observable request;
 never automatically retry after ambiguous delivery. No fallback to plaintext,
 stale cache or a different provider.
 

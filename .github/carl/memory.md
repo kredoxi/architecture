@@ -59,7 +59,12 @@ afterward (trailing hyphen allowed); POST /v1/resolve with exactly reference;
 response value/error/request_id, omitting empty value/error; policy version 1
 with principal-to-exact-reference allowlists and an independent compiled
 compact-JSON SHA-256 demo pin. Pin validation is not privileged anti-rollback.
-Future provider lifecycle and additional hardening remain proposals. Reconcile
+The implemented Provider interface is Resolve(context.Context, Reference)
+(string,error); synthetic output is generated 64-character hex. Only the
+trusted synchronous synthetic provider honours deadlines; arbitrary blocking
+provider work is not preempted. Event schema uses policy_decision, not decision.
+Configured limits are documented in docs/contracts.md. Future owned-byte
+provider lifecycle and additional hardening remain proposals. Reconcile
 cross-repository drift without claiming unexecuted tests or unsupported fields.
 
 <!-- BEGIN GENERATED: reconcile -->

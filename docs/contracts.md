@@ -137,35 +137,26 @@ including persistent connections; previous authorisation cannot be cached.
 
 ## Provider contract
 
-Future provider-neutral interface proposal, not a claim about the concrete
-MVP package or its current return type:
+Implemented MVP interface:
 
 ```go
 type Provider interface {
-    Resolve(ctx context.Context, key string) (Secret, error)
-}
-
-type Secret struct {
-    Value     []byte
-    Version   string
-    ExpiresAt time.Time
+    Resolve(context.Context, Reference) (string, error)
 }
 ```
 
-`key` comes only from an authorised broker mapping. It is not a caller path,
-URL or CLI command. `Resolve` honours deadlines/cancellation, is concurrency
-safe and transfers ownership of a fresh value buffer to the broker. Return
-neither a shared mutable slice nor secret-bearing error text. A zero expiry
-means the provider declares no expiry, not permission to cache forever.
-Version is non-secret opaque provenance; no enumeration/write/delete/list API
-is exposed to consumers.
+`Reference` is the parsed canonical reference authorised by the broker before
+the provider call. The synthetic provider returns a generated 64-character hex
+string. It exposes no enumeration/write/delete/list operation or production
+provider endpoint. The trusted synchronous synthetic implementation honours
+deadlines; a Go context cannot preempt an arbitrary blocking provider.
 
-Future adapters must reject empty or oversized values (initial design target
-16 KiB), expired values, invalid
-version metadata and unavailable providers explicitly. Provider errors use
-typed categories such as `not_found`, `unavailable`, `timeout`, `invalid_value`
-and `internal`; the broker never forwards raw backend errors. Clear owned
-buffers on every path, without claiming complete runtime zeroisation.
+String return values and runtime/JSON/TLS copies prevent guaranteed erasure.
+Owned-byte values, version/expiry metadata, bounded output and provider-neutral
+typed errors are future contract proposals, not current interface fields.
+Future adapters must honour cancellation themselves or run in a separately
+bounded process; do not claim in-process timeout forcibly stops backend work.
+They require least-privilege mapping, explicit failure and sanitised errors.
 
 The synthetic provider creates only synthetic data in memory, has no external
 credentials and is explicitly development/test-only. Do not persist generated
@@ -215,20 +206,33 @@ hex nor any future base64 representation is safe to log.
 | Provider deadline | 504 / `timeout` |
 | Internal non-secret failure | 500 / `internal` |
 
-No caching is implemented. Response `Cache-Control: no-store` is a transport
-hardening requirement. Unconfirmed initial resource targets are
-4 KiB request bodies, 16 KiB raw secret values, 32 active requests, 10-second
-total request/write deadline and a 5-second provider deadline within it.
-An enrolled-principal rate limit target is 10 requests/second,
-burst 20, plus unauthenticated connection limits. These are design targets,
-not benchmarks or implemented-limit claims. Bound TLS handshake/header reads
-and reject excess work without spawning unbounded goroutines.
+No caching is implemented. The core session reports these configured limits:
+
+| Resource | Configured MVP bound |
+| --- | --- |
+| Live sockets, including before TLS | 16 |
+| Concurrent resolutions | 8 |
+| MaxHeaderBytes | 4096, plus Go HTTP parser-buffer allowance; not an exact total wire cap |
+| Request body | 1024 bytes |
+| Client parsed response | 2048 bytes |
+| JSON nesting | Depth 8 |
+| Header/read/write/idle | 1 / 2 / 4 / 2 seconds |
+| Provider/client/shutdown | 2 / 8 / 5 seconds |
+
+These are reported settings, not measurements or security tests executed here.
+Only the trusted synchronous synthetic provider honours its deadline; arbitrary
+provider preemption is not implemented. A per-principal rate limiter, production
+value cap/expiry contract and durable event-sink deadline remain future hardening
+decisions. Response caching must be disabled; no plaintext/stale fallback.
 
 ## Event contract v1
 
 Use structured local JSON events with OS-native sinks/EDR collection as future
-adapters, not a mandatory proprietary backend. Illustrative event schema
-pending exact field-name alignment beyond the confirmed schema_version:
+adapters, not a mandatory proprietary backend. The confirmed event fields are
+`schema_version`, `timestamp`, `event_type`, `request_id`, optional `principal_id`
+and `reference_id`, `authentication_method`, `policy_decision`, `provider_id`,
+`status`, optional `error_category`, `agent_version` and `mode`.
+Illustrative decision event (alias values are not literal runtime pseudonyms):
 
 ```json
 {
@@ -239,10 +243,9 @@ pending exact field-name alignment beyond the confirmed schema_version:
   "principal_id": "demo-enrolled-consumer",
   "authentication_method": "mtls-uri-san",
   "reference_id": "demo-ref-001",
-  "decision": "allow",
+  "policy_decision": "allow",
   "provider_id": "synthetic",
   "status": "authorised",
-  "error_category": null,
   "agent_version": "development",
   "mode": "enforce"
 }
@@ -260,8 +263,9 @@ The core `resolved` status denotes an audited release attempt, not client
 receipt or application use. A future independently managed observer is required
 to report process termination reliably.
 
-Unauthenticated/malformed requests omit identity/reference/provider when
-unavailable; do not fabricate them. Unknown/unbounded input is never echoed.
+Unavailable principal/reference and absent errors use optional fields; do not
+fabricate authenticated identity. Provider remains the configured synthetic
+provider label, not a caller-selected value. Unknown/unbounded input is never echoed.
 Never record values (including base64), master/private keys, tokens, unnecessary
 environment data, body/header dumps or raw provider errors. Enforce mode records
 decisions that actually gate release; audit-only mode cannot imply denial.

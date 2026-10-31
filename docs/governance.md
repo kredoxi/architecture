@@ -80,3 +80,9 @@ policy or release pipeline is enabled by this architecture PR. The
 [roadmap](roadmap.md#cicd-and-release-prerequisites) specifies required checks.
 Verify live configuration and capabilities separately; do not report recommended
 controls as enabled. Licence/redistribution review also remains open.
+
+Core provider/event/resource contracts were aligned to implementation-session
+reports, not by executing runtime code in this repository. The core session
+reports a clean standard-library vulnerability scan after requiring Go 1.27.3;
+retain its scan output and toolchain evidence with the core PR rather than
+treating this architecture statement as independently executed validation.
