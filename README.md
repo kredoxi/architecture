@@ -24,6 +24,7 @@ an unmodified application does not substitute references automatically.
 | [Threat model](docs/threat-model.md) | Four attacker tiers, controls and residual risks |
 | [Mechanism research](docs/mechanisms.md) | Explicit integration versus interception, with primary sources |
 | [ADR 0001](docs/adr/0001-explicit-local-resolution.md) | Narrow MVP selection and consequences |
+| [Proposed ADR 0002](docs/adr/0002-native-ipc-identity-evaluation.md) | OS-native IPC identity research; decision deferred |
 | [Contracts](docs/contracts.md) | Reference grammar, identity, policy, providers, runtime and events |
 | [Test strategy](docs/testing.md) | Synthetic vertical slice and adversarial evidence gates |
 | [Roadmap](docs/roadmap.md) | Compatibility, future integrations and release prerequisites |

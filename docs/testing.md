@@ -48,6 +48,15 @@ artefacts. Printed output can say an operation succeeded, not print its value.
 | T19 | Rotation/cache/expiry | New request sees new provider version; expired/empty/oversized/shared-buffer values rejected; old delivered bytes cannot be recalled |
 | T20 | DoS/slow client/provider/sink | Test exact size/concurrency/rate/deadline targets; bounded goroutines and cancellation; recovery after saturation |
 | T21 | Enumeration boundary | Compare present and absent references for an authenticated unallowlisted principal: both return `policy_denied` and provider-call count stays zero. An allowlisted absent reference may return `secret_not_found`; prove no wildcard/list operation or unauthorised probe exists. |
+| T22 | Linux IPC account boundary | In disposable Linux infrastructure, test pathname socket parent/socket ownership and modes with broker, authorized consumer, unrelated UID, and same-UID process; verify abstract sockets are not used as if filesystem ACLs applied |
+| T23 | Linux peer and PID lifetime | Derive identity only from `SO_PEERCRED`; reject body/header/PID-name claims; force peer exit/reuse and test any `/proc`/image lookup race; do not treat a numeric PID as a stable process handle |
+| T24 | Windows pipe DACL and token | In disposable Windows infrastructure, verify explicit pipe security descriptors against broker, intended consumer, unrelated SID/logon session, and remote client; ensure default DACL is not relied on |
+| T25 | Windows impersonation | Verify authorization runs under the pipe client's impersonation token, checks failure, always reverts to self, and never executes privileged work after an impersonation failure |
+| T26 | Process and executable claims | Spoof process names, request fields and PID-based lookup timing; show OS account/token or key-holder authentication is not executable integrity |
+| T27 | Distinct OS identities | Run broker and consumer under separate disposable accounts/service identities and test key/config/endpoint access; report exact OS version, setup and privileges or mark blocked—not simulated |
+| T28 | IPC handle/endpoint substitution | Test inherited/duplicated handles, endpoint pre-creation/replacement, stale socket cleanup, pipe instance access, and broker restart without identity fallback |
+| T29 | Native telemetry mapping | Map existing event versions to journald/syslog or Event Log/ETW, test redaction and collector outage/loss; distinguish decision, attempted delivery, transport write and application consumption |
+| T30 | Anti-tamper and rollback | Verify signed update/integrity and monotonic policy-version design in a disposable target; show that digest-only checks and successful local log writes do not establish anti-rollback or durable SIEM receipt |
 
 Fuzz reference and strict request parsing; include exact 1/32/33-byte segment
 boundaries, 111-byte whole-reference cap and wire value limits. Unit tests alone
@@ -71,6 +80,13 @@ memory erasure. OS-peer IPC needs peer credential, socket/DACL, fake endpoint,
 handle inheritance and PID reuse tests on each OS. Hook/loader/VFS/proxy adapters
 must prove the intended operation is intercepted and test bypass/outage, not
 just show a resolver call.
+
+The IPC, distinct-account, anti-tamper and native telemetry cases above are
+future proof gates, not tests run by this architecture repository. Do not claim
+separate OS identities unless the tests ran in authorized disposable
+infrastructure. The current mTLS identity proves key possession; IPC peer
+credentials prove only the OS identity scope documented by each platform.
+Neither establishes that the authorized consumer used or kept a credential safe.
 
 ## Documentation validation in this repository
 
