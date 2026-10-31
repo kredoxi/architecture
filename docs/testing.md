@@ -29,8 +29,8 @@ artefacts. Printed output can say an operation succeeded, not print its value.
 | --- | --- | --- |
 | T01 | Stolen config/source artefacts | Consumer config contains reference, not synthetic value; enrolled keys are kept separately |
 | T02 | Invalid/overlong reference | Whole-string parser rejects wrong case/version/length/Unicode, not partial match |
-| T03 | Unknown reference | Fixed denied/not-found public category; no value or enumeration detail |
-| T04 | Unenrolled/unauthorised caller | TLS reject or policy deny; provider invocation count remains zero |
+| T03 | Unknown reference | An unallowlisted unknown reference returns `policy_denied` before provider lookup; an allowlisted but absent reference returns `secret_not_found` |
+| T04 | Unenrolled/unauthorised caller | TLS reject or policy deny; an authenticated unallowlisted caller cannot infer provider existence; provider invocation count remains zero |
 | T05 | Provider unavailable | Explicit sanitised error; no alternate/stale/plaintext fallback |
 | T06 | Broker unavailable | Client error, not using reference as password; no orphan consumer work |
 | T07 | Malformed IPC/API | Oversize, duplicate/unknown fields, invalid UTF-8/JSON, trailing values, compressed body rejected under limits |
@@ -47,6 +47,7 @@ artefacts. Printed output can say an operation succeeded, not print its value.
 | T18 | Filesystem races/redirection | Test symlink/reparse, parent ownership, check/reopen race and caller endpoints; unsupported real-secret protections remain explicit |
 | T19 | Rotation/cache/expiry | New request sees new provider version; expired/empty/oversized/shared-buffer values rejected; old delivered bytes cannot be recalled |
 | T20 | DoS/slow client/provider/sink | Test exact size/concurrency/rate/deadline targets; bounded goroutines and cancellation; recovery after saturation |
+| T21 | Enumeration boundary | Prove provider is never queried for unallowlisted references; verify only a principal allowed the reference can observe `secret_not_found` |
 
 Fuzz reference and strict request parsing; include exact 1/32/33-byte segment
 boundaries, 111-byte whole-reference cap and wire value limits. Unit tests alone

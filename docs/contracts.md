@@ -5,6 +5,9 @@ MVP implementation session's reported contract on 2026-10-31. Runtime test
 results remain core-repository evidence, not tests executed here. Requirements
 for production providers and additional hardening are identified separately.
 No compatibility baseline existed before this initial reconciliation.
+The [Core protocol source](https://github.com/kredoxi/kredoxi/blob/1896d0c25ca0efca7790f671a8de3c654eb49bc0/docs/protocol.md)
+is pinned to the reviewed implementation PR revision; Architecture CI checks it
+against the contract in this document.
 
 ## Reference grammar v1
 
@@ -72,25 +75,24 @@ a stable reference. Policy names are compared as exact canonical bytes.
 
 ## Identity and authorisation
 
-The demo principal is an enrolled client certificate with exactly one accepted
-URI SAN:
+The demo principal is an enrolled client certificate with exactly one canonical
+URI SAN of the form:
 
 ```text
 urn:kredoxi:principal:demo-consumer
 ```
 
-Compare the complete enrolled URI, not display names/CN or substrings.
-Do not infer a reference-segment grammar for all future principal identifiers.
-Verify the trusted issuer chain,
-validity window, client-auth EKU and enrolled principal. Reject missing,
-ambiguous/multiple accepted principal SANs or malformed identity. Successful TLS
-authentication does not imply authorisation.
+`urn:kredoxi:principal:<segment>` uses the same canonical lowercase 1-32 ASCII
+segment rule as the reference. Core binds only to loopback IPv4 `127.0.0.1` on
+an ephemeral port and uses a caller-supplied dedicated CA. The client verifies
+the server IP SAN `127.0.0.1`; the server verifies client chain, expiry,
+client-auth purpose and exactly one canonical URI SAN. Compare complete identity,
+not display names/CN or substrings. Successful TLS authentication does not imply
+authorisation.
 
-The client verifies the broker's enrolled trust root and server endpoint
-SAN/server-auth EKU; never use `InsecureSkipVerify` or accept a caller-selected
-trust store through the reference. Require TLS 1.3, disable secret-bearing
-early-data/replay paths, and do not use session resumption in the first demo
-unless reauthentication/expiry semantics are tested.
+The client uses the dedicated CA, TLS 1.3, no environment proxy, no redirect
+following and a closed connection per request. Never accept a caller-selected
+trust store or broker endpoint through the reference.
 
 This is **key-holder identity**, not executable identity. Caller process name,
 PID, headers or JSON identity claims are never trusted. Same-user theft of the
@@ -116,10 +118,10 @@ Resolution is the sole operation; there is no action or provider-mapping field
 in this policy. Exact allowlisted reference strings are matched for the enrolled
 principal. No wildcards, prefix match, regex, inherited grants or client-selected
 provider/endpoint.
-No match is denial; authenticated-but-disallowed returns no value and does not
-invoke the provider. Unknown and denied references have the same public error
-category to limit enumeration; restricted events can distinguish categories.
-The demo verifies a SHA-256 policy pin independently compiled into its trusted
+No wildcard/default allow is configured. Core allows at most 32 principals and
+64 references per principal and rejects duplicates. No match is denial and
+returns no value without invoking the provider. The demo verifies a SHA-256
+policy pin independently compiled into its trusted
 binary, computed over bytes produced by `json.Compact`. This removes insignificant
 JSON whitespace but does not sort keys; key ordering still affects the pin.
 It detects changes relative to that demo trust anchor, not replacement of the
@@ -167,9 +169,9 @@ rotation, cancellation and dependency/licensing review before activation.
 ## Runtime contract
 
 Implemented API: `POST /v1/resolve` on an operator-enrolled loopback
-endpoint. Verify loopback at bind/connect, not just an untrusted hostname.
-No public listener, redirects, proxy-environment discovery, endpoint supplied
-by reference, insecure HTTP fallback, batch resolve, list or write operation.
+IPv4 endpoint `127.0.0.1:<ephemeral-port>` using HTTPS/TLS 1.3 and a dedicated
+CA. No public listener, redirects, environment proxy, caller-selected endpoint,
+insecure HTTP fallback, batch resolve, list or write operation.
 
 Request (`Content-Type: application/json`):
 
@@ -178,39 +180,51 @@ Request (`Content-Type: application/json`):
 ```
 
 The request has exactly `reference`, with no body schema_version or principal
-claim. `/v1/resolve` versions the protocol. Server-generated request IDs correlate
-events/responses; unauthenticated clients cannot access the provider.
+claim. `/v1/resolve` versions the protocol. Success contains `value` and a
+32-character hex `request_id`; errors contain `error` and `request_id`, never
+`value`. An audit failure has an empty request ID because no event committed.
+Use `Cache-Control: no-store`; each request closes the connection.
 Strict input hardening must reject unsupported methods/paths/content encoding,
 unknown or duplicate fields, invalid UTF-8/JSON and trailing values; the
 core-repository test evidence establishes which checks are implemented.
 
-Implemented response fields are `value`, `error` and `request_id`. `value` and
-`error` have omitempty semantics: success includes value; failure includes error
-and must omit value. The synthetic demo value is a generated 64-character hex
-string, not a base64 field. It is secret-bearing test data and must never appear
-in diagnostics. No response schema_version, provider version or expiry field
-is currently reported; those require future explicit protocol evolution.
-
 Failure responses must contain no resolved value, raw provider detail, arbitrary
-input echo or certificate dump. An encoded secret is still a secret; neither
-hex nor any future base64 representation is safe to log.
+input echo or certificate dump. The synthetic demo value is a generated
+64-character hex string; it is secret-bearing test data and must never appear in
+diagnostics.
 
-| Outcome | Future hardening target, not confirmed current status table |
-| --- | --- |
-| Malformed input/schema/reference | 400 / `invalid_request` |
-| Authenticated denied or unknown reference | 403 / `access_denied` |
-| Unsupported method/content type | 405 / `invalid_request`; 415 / `invalid_request` |
-| Oversized input | 413 / `request_too_large` |
-| Concurrency/rate limit | 429 / `resource_limit` |
-| Provider or required event sink unavailable | 503 / `unavailable` |
-| Provider deadline | 504 / `timeout` |
-| Internal non-secret failure | 500 / `internal` |
+| HTTP | Public category | Meaning |
+| --- | --- | --- |
+| 200 | none | Policy/provider resolved; pre-release event recorded |
+| 400 | `invalid_request` / `invalid_reference` | Invalid framing, JSON or reference grammar |
+| 401 | `authentication_denied` | TLS-verified certificate has invalid/ambiguous URI SAN |
+| 403 | `policy_denied` | Authenticated principal lacks exact reference permission |
+| 503 | `secret_not_found` | Allowlisted reference absent from provider |
+| 503 | `provider_unavailable` / `canceled` | Provider failed or operation cancelled |
+| 503 | `broker_busy` | Concurrent resolution limit reached |
+| 503 | `telemetry_unavailable` | Audit writer failed; release denied until restart |
+
+TLS failures occur before HTTP and become `broker_unavailable` at the explicit
+client. Invalid client response becomes `invalid_response`; client cancellation
+is `canceled`. No automatic retry occurs. The client does not receive TLS
+diagnostic details.
+
+**Enumeration boundary:** the broker checks the exact policy allowlist before
+provider lookup. Thus every unallowlisted reference probe returns `policy_denied`
+without querying whether that reference exists; an authenticated caller not
+allowlisted for a reference cannot enumerate its provider existence. For an
+allowlisted reference, `secret_not_found` (503) differs from `policy_denied`
+(403), so a principal already authorized for that name can observe whether its
+provider entry exists. This is the implemented and tested behavior, not a
+promise that all unknown and denied references share one public error. Provider
+failure after authorization is `not_evaluated` in telemetry, not policy denial.
+If policy semantics change, revisit this disclosure tradeoff explicitly.
 
 No caching is implemented. The core session reports these configured limits:
 
 | Resource | Configured MVP bound |
 | --- | --- |
-| Live sockets, including before TLS | 16 |
+| Live sockets, including before TLS | 16 (pending sockets also consume OS backlog) |
 | Concurrent resolutions | 8 |
 | MaxHeaderBytes | 4096, plus Go HTTP parser-buffer allowance; not an exact total wire cap |
 | Request body | 1024 bytes |
@@ -229,10 +243,17 @@ decisions. Response caching must be disabled; no plaintext/stale fallback.
 
 Use structured local JSON events with OS-native sinks/EDR collection as future
 adapters, not a mandatory proprietary backend. The confirmed event fields are
-`schema_version`, `timestamp`, `event_type`, `request_id`, optional `principal_id`
+`schema_version`, `timestamp` (UTC RFC3339Nano), `event_type`, `request_id`, optional `principal_id`
 and `reference_id`, `authentication_method`, `policy_decision`, `provider_id`,
 `status`, optional `error_category`, `agent_version` and `mode`.
-Illustrative decision event (alias values are not literal runtime pseudonyms):
+`policy_decision` is `allow`, `deny` or `not_evaluated`; `authentication_method`
+is `mtls-uri-san`; `provider_id` is `synthetic`; `mode` is `enforcement`.
+Statuses are `started`, `stopped`, `resolved`, `invalid_request`,
+`invalid_reference`, `authentication_denied`, `policy_denied`,
+`secret_not_found`, `provider_unavailable`, `broker_busy`, `internal_failure`,
+`canceled`, `delivery_failed` and `transport_failure`.
+
+Illustrative decision event (aliases are not literal per-run pseudonyms):
 
 ```json
 {
@@ -245,9 +266,9 @@ Illustrative decision event (alias values are not literal runtime pseudonyms):
   "reference_id": "demo-ref-001",
   "policy_decision": "allow",
   "provider_id": "synthetic",
-  "status": "authorised",
+  "status": "resolved",
   "agent_version": "development",
-  "mode": "enforce"
+  "mode": "enforcement"
 }
 ```
 
@@ -259,9 +280,13 @@ correlation intentionally unstable; stable operational pseudonyms need a
 separate protected telemetry-key lifecycle. Bare hashes of guessable reference
 names are vulnerable to dictionary recovery.
 
-The core `resolved` status denotes an audited release attempt, not client
-receipt or application use. A future independently managed observer is required
-to report process termination reliably.
+The core `resolved` status denotes successful policy/provider resolution and a
+pre-response release attempt, not client receipt or application use. Provider
+failure after authorization does not record `allow`; `not_evaluated` must not be
+misread as policy denial. IDs use HMAC-SHA256 per-run pseudonyms and cannot
+correlate across runs. A successful writer call does not imply fsync, integrity,
+durability or SIEM acknowledgement. A future independently managed observer is
+required to report process termination reliably.
 
 Unavailable principal/reference and absent errors use optional fields; do not
 fabricate authenticated identity. Provider remains the configured synthetic

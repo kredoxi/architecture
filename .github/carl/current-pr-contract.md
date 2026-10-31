@@ -7,11 +7,13 @@ validated, reconciled baseline PR revision is published.
 ## Goal and approved scope
 
 Work only in kredoxi/architecture. Define the threat model, research resolution
-and interception, select a narrow MVP in an ADR, and define reference, identity,
-policy, provider and runtime contracts. Persist practical requirements,
-architecture, compatibility, test strategy, roadmap and licensing tradeoffs.
-Install the user-requested cARL runtime through its supported CLI and sync the
-production Copilot loader. Open a PR; do not merge.
+and interception, keep the MVP ADR proposed for owner decision, and define
+reference, identity, policy, provider and runtime contracts. Add minimal
+read-only architecture CI that reconciles against Core. Persist practical
+requirements, architecture, compatibility, test strategy, roadmap and licensing
+tradeoffs. Install the user-requested cARL runtime through its supported CLI and
+sync the production Copilot loader. Open/update a PR; do not merge before
+explicit owner acceptance.
 
 ## Constraints and forbidden scope
 
@@ -23,7 +25,8 @@ Do not hand-edit the runtime manifest or fabricate pack checks.
 
 Do not implement the core MVP here, change organisation controls, choose a
 licence, use real credentials, install privileged interception, publish releases,
-merge PRs, force-push or edit another checkout.
+mark checks required before verified success/identity, merge PRs, force-push or
+edit another checkout.
 
 ## Expected files and step-by-step plan
 
@@ -32,9 +35,13 @@ merge PRs, force-push or edit another checkout.
    citations and explicit distinctions between proposed and demonstrated work.
 3. Reconcile .github/carl/memory.md and profiles.json without relaxing controls.
    Add .gitattributes to preserve canonical LF runtime bytes on Windows checkout.
-4. Check Markdown links, fenced examples and diff whitespace; run cARL status,
-   doctor, pack effective and trace; regenerate map/reconcile using the CLI.
-5. Commit the bounded work, open the requested PR and report remaining risks.
+4. Validate contracts, grammar, examples, relative links, Core protocol source,
+   obvious-secret patterns and diff hygiene with standard-library scripts.
+5. Add a PR/main-push workflow with read-only permissions, immutable-pinned
+   actions and verified cARL effective policy; do not add a required check.
+6. Run cARL status/doctor/effective/trace; regenerate map/reconcile.
+7. Commit/push the bounded work and update the open PR. Present a decision
+   packet; request owner acceptance before changing ADR status or merging.
 
 No new tooling dependency or publishing/CI workflow is required for this
 documentation-only baseline. Future CI/release prerequisites are documented.
@@ -48,6 +55,8 @@ documentation-only baseline. Future CI/release prerequisites are documented.
 | A3: parser/provider/runtime/event contracts are versioned and fail securely | Review examples and requirement/test traceability |
 | A4: effective governance keeps core controls without overrides | CLI effective/trace plus loader and canonical-file review |
 | A5: delivery does not claim implementation, support, licence or security tests not executed | Review status, roadmap and PR description |
+| A6: only an allowlisted principal reaches provider lookup; `policy_denied` and `secret_not_found` are distinct | Compare Core broker implementation, protocol, tests and documented enumeration boundary |
+| A7: workflow permissions are read-only and dependencies are immutably pinned; no check is required before successful identity verification | Review workflow and GitHub check-run evidence |
 
 ## Stop conditions and escalation
 
@@ -59,7 +68,11 @@ tool permission or PR delivery failures explicitly.
 ## Risks and reconciliation
 
 External documentation establishes mechanism semantics, not Kredoxi test
-results. Cross-repository wire contracts remain provisional until core
-implementation confirms them. Update memory to retain that distinction.
+results. Keep architecture acceptance pending despite Core MVP implementation.
+Document the non-enumeration guarantee at the policy boundary and the narrower
+`secret_not_found` information visible to an allowlisted caller. Update memory
+to retain those distinctions. Close this contract after successful CI and
+presentation of the acceptance packet; owner retains control of ADR acceptance
+and merge. Do not autonomously mark the check required.
 Close this contract after delivery; a completed contract is historical scope,
 not a restriction on future approved work.

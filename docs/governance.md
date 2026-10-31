@@ -75,14 +75,20 @@ boundaries/tool policy and effective non-overridden packs before execution.
 
 ## Remaining controls
 
-No GitHub workflow, ruleset, organisation security setting, dependency alert
-policy or release pipeline is enabled by this architecture PR. The
-[roadmap](roadmap.md#cicd-and-release-prerequisites) specifies required checks.
-Verify live configuration and capabilities separately; do not report recommended
-controls as enabled. Licence/redistribution review also remains open.
+The `Architecture validation` workflow is proposed in this PR. It explicitly
+uses `contents: read`, immutable-pinned checkout, checksummed cARL 1.0.2 and
+standard-library Python validation. Its exact GitHub check identity must be
+observed on a successful run before anyone configures it as required. This PR
+does not change rulesets or claim they exist. Organization security settings,
+dependency alerts or release workflows are not configured here. Verify live
+settings separately; do not report recommendations as enabled.
+Licence/redistribution review remains open.
 
-Core provider/event/resource contracts were aligned to implementation-session
-reports, not by executing runtime code in this repository. The core session
-reports a clean standard-library vulnerability scan after requiring Go 1.27.3;
-retain its scan output and toolchain evidence with the core PR rather than
-treating this architecture statement as independently executed validation.
+Core provider/event/resource contracts were reconciled against the Core
+implementation PR's protocol and broker source. CI checks the protocol file
+against the current Core default branch or open implementation PR, and falls
+back to the pinned reviewed revision if Core has not published that file.
+The core session reports a clean standard-library
+vulnerability scan after requiring Go 1.27.3; retain its scan output/toolchain
+evidence with Core rather than treating this architecture statement as an
+independently executed validation.

@@ -73,11 +73,12 @@ design.
    principal identity from transport, not request fields.
 4. Capture one immutable policy revision, parse the reference and apply exact
    `resolve` authorisation. Denial must not invoke the provider.
-5. Record the access decision without sensitive identifiers. Required sink
-   failure blocks release rather than silently losing access events.
-6. Call the provider under the request deadline. Validate length, expiry and
+5. Record the access decision without sensitive identifiers. Audit writer
+   failure blocks release rather than silently losing the event.
+6. Call the provider under the request deadline. Validate the synthetic MVP
+   output shape; future providers must also define bounds and expiry.
    buffer ownership. Do not share values across requests.
-7. Persist a redacted release-attempt event before sending bytes. Sink failure
+7. Emit a redacted release-attempt event before sending bytes. Writer failure
    disposes of bytes and returns an explicit non-secret error.
 8. Deliver bytes over authenticated TLS with response caching disabled.
 9. Consumer uses bytes without logging and clears owned buffers on every path.
@@ -87,6 +88,10 @@ and delivery can produce an attempt without receipt; a crash after delivery
 cannot revoke bytes. Exactly-once secret use is not promised. Completion events,
 if implemented, must distinguish attempted delivery from completed transport
 write, not claim the application used the credential.
+
+The current telemetry writer has no integrity/durability guarantee; a successful
+write is not fsync or SIEM acknowledgement. Do not equate synchronous audit
+emission with durable evidence.
 
 ## Residence, caching and failure
 

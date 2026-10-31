@@ -41,10 +41,16 @@ Go version and executed commands; compiling elsewhere does not establish support
 
 ## CI/CD and release prerequisites
 
-This documentation baseline adds no publishing workflow or mandatory package
-dependency. Before merge, configure repository checks for Markdown
-links/formatting and verified cARL health/effective policy; record exact check
-names in rulesets. For the core repo require build, unit/integration/adversarial
+The architecture validation workflow runs on relevant PRs and pushes to `main`.
+It uses read-only `contents: read`, pins checkout to an immutable SHA, downloads
+the current cARL release with checksum verification, and uses the Python
+standard library for focused contract/example/grammar/link/secret/hygiene checks.
+It reconciles the Core protocol where available. It uses no application
+credentials, privileged execution or production provider.
+
+Do not configure the check as required until it succeeds and its exact GitHub
+check identity has been verified. This PR does not change repository rulesets.
+For the core repo require build, unit/integration/adversarial
 tests, race where supported, lint/vet/static/dependency vulnerability checks,
 secret scanning and artefact integrity.
 
