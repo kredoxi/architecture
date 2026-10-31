@@ -129,6 +129,26 @@ applications; whether the broker must support non-local clients; required OS
 versions; and the value of independent key-based authentication after native
 peer authorization. No option is approved by this proposal.
 
+### Owner-directed follow-up (research only)
+
+The owner directed follow-up evaluation to prioritize native IPC as a possible
+alternative same-host transport, retaining the current mTLS implementation as
+the reference baseline and a candidate for portable or future non-local
+scenarios. This is a research-priority decision only: ADR 0002 remains
+Proposed; it does not select or authorize an additional production transport,
+non-local broker access, replacement of mTLS, or implementation.
+
+The experiments must compare Linux pathname Unix sockets with `SO_PEERCRED`
+and Windows named pipes with access-token identity in disposable environments
+where elevated setup is required. Measure what account separation adds against
+same-user compromise, key/private-material exposure, endpoint permissions,
+process isolation, impersonation, PID reuse/TOCTOU and confused-deputy risks.
+Include setup/upgrade/operations cost, platform-specific failure behavior, and
+whether layering both IPC and mTLS provides a demonstrable security benefit
+beyond either alone. Return reproducible evidence and a comparative
+recommendation before seeking architectural approval. Do not enable a second
+production transport or non-local access during this research.
+
 ## Deployment, integrity and anti-tamper requirements
 
 Any later OS-native transport proposal must specify least-privilege service

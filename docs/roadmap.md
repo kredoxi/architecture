@@ -21,9 +21,12 @@ Go version and executed commands; compiling elsewhere does not establish support
 1. **Synthetic explicit vertical slice:** align parser/policy/provider/wire/events,
    prove allowed/denied mTLS access, no config/log leakage, outage and Tier 3
    limits. Mark synthetic components development-only.
-2. **OS service/IPC isolation (proposed):** decide whether native peer IPC
-   complements or replaces mTLS for same-host traffic only after owner review
-   of [Proposed ADR 0002](adr/0002-native-ipc-identity-evaluation.md).
+2. **OS service/IPC isolation (proposed):** first evaluate native peer IPC as a
+   possible alternative same-host transport against the current mTLS reference,
+   as directed in [Proposed ADR 0002](adr/0002-native-ipc-identity-evaluation.md).
+   This research priority does not approve a second production transport,
+   non-local access or replacement of mTLS; seek architectural approval only
+   after reproducible comparative evidence and recommendation.
    Linux pathname socket/kernel peer credentials and Windows named-pipe
    DACL/token verification require separate implementations and disposable
    distinct-identity tests. Provision least-privilege broker identity; test
