@@ -1,5 +1,11 @@
 # Kredoxi architecture
 
+<p align="center">
+  <a href="https://github.com/kredoxi/.github/tree/main/logos">
+    <img src="https://raw.githubusercontent.com/kredoxi/.github/main/logos/kredoxi_logo_optimized.png" alt="Kredoxi wordmark" width="240">
+  </a>
+</p>
+
 Kredoxi replaces credential values in application configuration with non-secret
 references, resolving them at an authenticated, authorised runtime boundary.
 It is conventional security software, not an AI agent.
