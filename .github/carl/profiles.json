@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "defaults": {
+    "organization": [],
+    "repository": [
+      "core/baseline",
+      "core/carl",
+      "core/cognition-governance",
+      "core/dependency",
+      "core/identity",
+      "core/memory-cache",
+      "core/pr-contract",
+      "core/security",
+      "core/tool-permission-tiers"
+    ]
+  },
+  "profiles": [
+    {
+      "id": "architecture",
+      "description": "Kredoxi architecture and Go resolver contract work; all core governance remains active.",
+      "packs": [
+        "languages/go",
+        "platform/cicd"
+      ]
+    }
+  ],
+  "active": {
+    "profile": "architecture"
+  }
+}

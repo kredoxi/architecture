@@ -1,0 +1,70 @@
+name: Architecture validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".gitattributes"
+      - "README.md"
+      - "docs/**"
+      - "scripts/**"
+      - "tests/**"
+      - ".github/**"
+  push:
+    branches: [main]
+    paths:
+      - ".gitattributes"
+      - "README.md"
+      - "docs/**"
+      - "scripts/**"
+      - "tests/**"
+      - ".github/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      - name: Install cARL CLI 1.0.2 with checksum verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="carl_1.0.2_linux_amd64.tar.gz"
+          base="https://github.com/goldjg/cARL/releases/download/v1.0.2"
+          curl --fail --location --silent --show-error "$base/$archive" -o "$RUNNER_TEMP/$archive"
+          curl --fail --location --silent --show-error "$base/checksums.txt" -o "$RUNNER_TEMP/checksums.txt"
+          (cd "$RUNNER_TEMP" && grep -E "  $archive$" checksums.txt | sha256sum --check --strict)
+          mkdir "$RUNNER_TEMP/carl"
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/carl" carl
+          chmod 755 "$RUNNER_TEMP/carl/carl"
+          "$RUNNER_TEMP/carl/carl" --version
+
+      - name: Verify cARL status and effective policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          carl="$RUNNER_TEMP/carl/carl"
+          "$carl" status 2>&1 | tee "$RUNNER_TEMP/carl-status.txt"
+          "$carl" doctor 2>&1 | tee "$RUNNER_TEMP/carl-doctor.txt"
+          "$carl" pack effective --json > "$RUNNER_TEMP/carl-effective.json"
+
+      - name: Validate architecture contracts and hygiene
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -v
+          python3 scripts/validate_architecture.py \
+            --effective "$RUNNER_TEMP/carl-effective.json" \
+            --carl-status "$RUNNER_TEMP/carl-status.txt" \
+            --carl-doctor "$RUNNER_TEMP/carl-doctor.txt"
+          git diff --check HEAD^ HEAD
