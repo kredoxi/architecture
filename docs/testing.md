@@ -104,6 +104,12 @@ of a production endpoint, workload identity, executable identity, enrollment
 or lifecycle control. Apply the report's deployment identity model and
 evidence-state distinctions when reviewing future tests.
 
+The combined Linux three-role case remains unverified: the `0700` parent
+replacement test also blocks unrelated-UID traversal, while the separate
+`0711` peer-policy test allows an unrelated UID to connect and denies it before
+provider lookup. Neither demonstrates an authorized distinct consumer
+resolving through the broker-owned endpoint while unable to replace it.
+
 ## Documentation validation in this repository
 
 Review R01-R14 against this matrix and the PR's A1-A5 assertions. Check local

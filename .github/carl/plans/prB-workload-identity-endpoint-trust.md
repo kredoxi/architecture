@@ -2,7 +2,8 @@
 
 ## Plan metadata
 
-- Status: active; evidence, architecture decision package, and documentation only
+- Status: final integration; evidence references and architecture decision
+  package only; no production implementation
 - Author: Copilot
 - Created: 2026-11-01
 
@@ -55,7 +56,7 @@ runtime manifest, credentials, or privileged host configuration is in scope.
    change ADR 0001 or select a production architecture.
 7. Run the documented Architecture tests/validator, current cARL diagnostics,
    link/source-reference and secret checks, and final diff hygiene; then open
-   the separate Architecture PR and leave it open.
+   the separate Architecture PR.
 
 ## Contract assertions
 
@@ -86,6 +87,11 @@ runtime manifest, credentials, or privileged host configuration is in scope.
 - Review ADR statuses and confirm no Core or production source changed.
 - Do not rerun or claim Core native security tests from this Architecture
   checkout; cite only verified Core PR A source and CI.
+- Reconcile the merged Core PR #6 chain, retain the test-only race-fix
+  attribution, and preserve the explicitly unverified Linux three-identity
+  scenario. Merge Architecture PR #5 only under the owner-authorized final
+  integration amendment in the current PR contract and only after its updated
+  required check, reviews, protection and base-freshness gates pass.
 
 ## Risks
 

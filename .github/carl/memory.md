@@ -94,6 +94,15 @@ report](../../docs/native-ipc-identity-evidence.md) and [Phase 4 workload
 identity and endpoint trust report](../../docs/phase4-workload-identity-endpoint-trust.md).
 ADR 0002 remains Proposed/deferred and no transport is selected.
 
+Core PR #6's Phase 4 test source is `9cae544`; the unrelated demo-test
+readiness synchronization fix is `6673f2b`. The PR merged at
+`d10dfcf6032cfbbbadf0d874805107fd6fa57061`, with passing final PR-head and
+default-branch checks. The Linux three-role case remains unverified: the
+`0700` endpoint replacement test and separate `0711` peer-policy denial test
+do not demonstrate an authorized distinct consumer reaching the endpoint
+without replacement rights while an unrelated UID is denied. See the Phase 4
+report for exact source/run references and the test-only race-failure history.
+
 <!-- BEGIN GENERATED: reconcile -->
 ## Repository snapshot
 

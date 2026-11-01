@@ -29,33 +29,49 @@ credential lifecycle, and comparative performance were not tested.
 ## Evidence provenance and reproducibility
 
 Core PR A is [kredoxi/kredoxi#6](https://github.com/kredoxi/kredoxi/pull/6),
-currently open. Its current head is
-[`3ca30d9ec17527cc877b7cbdfb7a7e895e60a27a`](https://github.com/kredoxi/kredoxi/commit/3ca30d9ec17527cc877b7cbdfb7a7e895e60a27a).
-The Phase 4 experiment tests were added in commit
+merged 2026-11-01 at PR head
+[`28b2f90014c821d4507092c882987ca1e80d2847`](https://github.com/kredoxi/kredoxi/commit/28b2f90014c821d4507092c882987ca1e80d2847),
+merge commit and verified Core `main`
+[`d10dfcf6032cfbbbadf0d874805107fd6fa57061`](https://github.com/kredoxi/kredoxi/commit/d10dfcf6032cfbbbadf0d874805107fd6fa57061).
+The Phase 4 Linux and Windows experiment tests were added in
 [`9cae544d85ececd814e2977f0e32741ec1b9b773`](https://github.com/kredoxi/kredoxi/commit/9cae544d85ececd814e2977f0e32741ec1b9b773).
-Comparing that commit with the current head shows only the Core plan and
-`experiments/ipc/README.md` changed afterward; the Linux and Windows test
-source files are unchanged. The final-head CI run therefore validates the
-current experiment test source.
+Their test files were unchanged through the Core PR head and merge; the final
+merged experiment README is independently identified below. Core also made a
+narrow test-only correction to the unrelated demo supervisor readiness race
+in [`6673f2b96409c8ee099fa5644ea5510975eec7b8`](https://github.com/kredoxi/kredoxi/commit/6673f2b96409c8ee099fa5644ea5510975eec7b8).
+This correction changed `cmd/demo/main_test.go`, not the IPC implementation or
+experiment test files.
 
 | Evidence source | Exact environment and result |
 |---|---|
-| [Core CI run 41341767034](https://github.com/kredoxi/kredoxi/actions/runs/41341767034), head `3ca30d9` | `governance`, `test (ubuntu-latest)`, and `test (windows-latest)` all completed successfully. |
-| [Linux job 124953610811](https://github.com/kredoxi/kredoxi/actions/runs/41341767034/job/124953610811) | Native GitHub-hosted `ubuntu-24.04`, Go `1.27.3 linux/amd64`. The IPC tests, `go test ./...`, build, vet, race/fuzz, formatting, vulnerability and repeat-build checks passed. |
-| [Windows job 124953612318](https://github.com/kredoxi/kredoxi/actions/runs/41341767034/job/124953612318) | Native GitHub-hosted Microsoft Windows Server 2025 (`10.0.26100`, `windows-2025-vs2026` image), Go `1.27.3 windows/amd64`. The IPC tests, `go test ./...`, build, vet, formatting, vulnerability and repeat-build checks passed; the race/fuzz step was skipped by workflow design. |
-| [Governance job 124953611883](https://github.com/kredoxi/kredoxi/actions/runs/41341767034/job/124953611883) | The pinned cARL governance check passed. |
+| [Core Phase 4 source commit `9cae544`](https://github.com/kredoxi/kredoxi/commit/9cae544d85ececd814e2977f0e32741ec1b9b773) | Adds the synthetic Linux/Windows IPC endpoint experiments; the experiment test source remains unchanged at the final merge. |
+| [Core CI run 41341767034](https://github.com/kredoxi/kredoxi/actions/runs/41341767034), initial evidence head `3ca30d9` | Attempt 1's Linux `go test -race ./...` failed in the pre-existing `cmd/demo/TestSupervisorTerminationContainsOwnedChild` at `cmd/demo/main_test.go:275`; the IPC package passed. Retry attempt 2 passed. This was diagnosed and subsequently fixed as a race-sensitive test synchronization issue, not an IPC or runner failure. |
+| [Test-only fix commit `6673f2b`](https://github.com/kredoxi/kredoxi/commit/6673f2b96409c8ee099fa5644ea5510975eec7b8) | Changes only `cmd/demo/main_test.go`: carries the child address in the completed readiness diagnostic and waits for a complete captured output line instead of racing a readiness signal against a separately drained stdout snapshot. No production code or IPC test code changed. |
+| [Post-fix Core PR-head run 41345894257](https://github.com/kredoxi/kredoxi/actions/runs/41345894257), head `ac585de` | Governance, native Ubuntu and native Windows jobs all passed with the test-only fix. The Linux race and fuzz step passed; Windows race/fuzz was skipped by workflow design. |
+| [Final Core PR-head run 41350158822](https://github.com/kredoxi/kredoxi/actions/runs/41350158822), head `28b2f90` | Governance job `124978400173`, Windows job `124978400298`, and Ubuntu job `124978400307` passed. Linux race/fuzz passed; Windows race/fuzz was skipped by workflow design. The intervening `28b2f90` commit updated Core governance/merge authorization only. |
+| [Final PR-head Ubuntu job 124978400307](https://github.com/kredoxi/kredoxi/actions/runs/41350158822/job/124978400307) | Native GitHub-hosted `ubuntu-24.04` (image `20261025.353.1`), Go `1.27.3 linux/amd64`; IPC tests, `go test ./...`, build, vet, race/fuzz, formatting, vulnerability and repeat-build checks passed. |
+| [Final PR-head Windows job 124978400298](https://github.com/kredoxi/kredoxi/actions/runs/41350158822/job/124978400298) | Native GitHub-hosted `windows-2025-vs2026` (image `20261021.278.1`), Go `1.27.3 windows/amd64`; IPC tests, `go test ./...`, build, vet, formatting, vulnerability and repeat-build checks passed; race/fuzz skipped by workflow design. |
+| [Core PR #6 merged](https://github.com/kredoxi/kredoxi/pull/6) | Merged at `d10dfcf6032cfbbbadf0d874805107fd6fa57061`, with PR head `28b2f90014c821d4507092c882987ca1e80d2847`. |
+| [Core default-branch CI run 41350453082](https://github.com/kredoxi/kredoxi/actions/runs/41350453082), exact merge SHA `d10dfcf` | Governance job `124979279768`, Ubuntu job `124979279890`, and Windows job `124979279945` all passed on the default branch. Linux race/fuzz passed; Windows race/fuzz remained skipped by workflow design. |
+| [Core default-branch Ubuntu job 124979279890](https://github.com/kredoxi/kredoxi/actions/runs/41350453082/job/124979279890) | Native GitHub-hosted `ubuntu-24.04` (image `20261025.353.1`), Go `1.27.3 linux/amd64`; the final merged source passed the Linux checks listed above, including race/fuzz. |
+| [Core default-branch Windows job 124979279945](https://github.com/kredoxi/kredoxi/actions/runs/41350453082/job/124979279945) | Native GitHub-hosted `windows-2025-vs2026` (image `20261021.278.1`), Go `1.27.3 windows/amd64`; final merged source passed the Windows checks listed above; race/fuzz skipped by workflow design. |
 
-Core PR #6 documents the focused reproducible command as
-`go test ./experiments/ipc -count=1 -v`; the final CI logs also show the
-individual native test names and outcomes below. Linux uses the already
-present `nobody` account via a helper run as `sudo -n -u nobody` for the
-distinct-UID cases. The tests verify the helper's actual UID differs from the
-broker UID; they do not create or alter an account. Windows fake-pipe tests use
-the current runner token SID and do not provision another account or service
-identity. The Windows experiment did not inspect or record the runner token's
-administrator membership or integrity level, so no claim is made about those
-privileges. No administrator/root attacker was tested. Linux's use of `sudo`
-to switch to `nobody` is not a privileged-attacker test.
+The reproducible IPC experiment command is
+`go test ./experiments/ipc -count=1 -v`; the native logs show individual test
+names and outcomes. Linux uses the already-present `nobody` account via a
+helper run as `sudo -n -u nobody` for selected distinct-UID cases. The tests
+verify that helper's actual UID differs from the broker UID; they do not
+create or alter an account. Windows fake-pipe tests use the current runner
+token SID and do not provision another account or service identity. The
+Windows experiment did not inspect or record the runner token's administrator
+membership or integrity level, so no claim is made about those privileges.
+No administrator/root attacker was tested. Linux's use of `sudo` to switch to
+`nobody` is not a privileged-attacker test.
+
+The final Windows and Linux test source is the source added at `9cae544`;
+Core's post-fix PR-head and default-branch CI also reran it at `ac585de`,
+`28b2f90`, and `d10dfcf`. The race fix at `6673f2b` is test-harness-only and
+does not strengthen IPC evidence.
 
 This Architecture report did not execute Core tests locally. CI output,
 source and the Core experiment README are the evidence. A successful CI job
@@ -111,6 +127,52 @@ The broader CI suite also reports passing build, `go test ./...`, vet,
 formatting, vulnerability and build-integrity checks. Linux race and configured
 fuzz checks passed; Windows skipped the race/fuzz step by workflow design.
 These checks do not expand the scope of the IPC assertions.
+
+### Three-role Linux test remains unverified
+
+The requested combined topology—broker B, an authorized consumer A under a
+distinct UID, and unrelated UID U—was **not demonstrated**. The two existing
+Linux cases cover different properties under incompatible directory
+permissions:
+
+| Existing case | Parent/socket setup | What the test showed | What it did not show |
+|---|---|---|---|
+| `TestLinuxDistinctUIDDeniedByKernelAndPolicy` | Parent `0711`; socket `0666` | The existing unrelated `nobody` UID can connect; `SO_PEERCRED` supplies its actual UID; exact-reference policy denies it before provider lookup. | No separate authorized consumer UID A was allowed and shown resolving through that endpoint. |
+| `TestLinuxDifferentUIDCannotReplaceBrokerEndpoint` | Broker-owned parent `0700`; socket `0666` | `nobody` cannot rename or unlink the endpoint; the original inode remains. | Because the parent also blocks traversal/connect for U, this does not demonstrate a distinct authorized A reaching the broker while lacking endpoint replacement rights. |
+
+Thus the report does **not** claim that an authorized distinct consumer can
+reach and resolve from a broker-owned endpoint while being unable to replace
+it, with a third UID connecting but denied by policy. No such three-role
+experiment was run; account provisioning was not done in CI or on the local
+host. A future owner-authorized disposable Linux VM test could use non-root
+B/A/U accounts, a broker-owned parent with traversal but no write for A/U
+(for example `0711`) and a deliberately broad socket (`0666`): allow only A
+by observed `SO_PEERCRED`, require A to resolve with one provider lookup while
+rename/unlink fails, and require U to connect but receive `policy_denied`
+with zero lookups. Keep a separate parent-`0711`/socket-`0600` case to isolate
+kernel connect denial. This is a proposed test design, not completed evidence.
+
+### Linux race failure and test-only correction
+
+The first attempt of run `41341767034` failed
+`cmd/demo/TestSupervisorTerminationContainsOwnedChild` at
+`cmd/demo/main_test.go:275`, with “supervisor readiness diagnostic was
+malformed.” The Linux IPC package passed in that same run. The log shows the
+failure occurred in `go test -race ./...`; retry attempt 2 passed. Core
+diagnosed the pre-existing demo test's synchronization flaw: the parent waited
+for a readiness signal on stderr and then immediately snapshotted a separately
+drained stdout capture, which could still lack the child listener address
+under race-detector scheduling.
+
+The narrowly scoped fix in
+[`6673f2b`](https://github.com/kredoxi/kredoxi/commit/6673f2b96409c8ee099fa5644ea5510975eec7b8)
+passes the address in the completed readiness diagnostic and waits for a
+complete stdout line before parsing it. It changes only `cmd/demo/main_test.go`;
+it is not an IPC fix or security result. Post-fix run 41345894257, final PR-head
+run 41350158822, and default-branch run 41350453082 all passed their Linux
+race/fuzz steps. This classifies the original failure as a race-sensitive
+test-harness defect, not evidence of an IPC regression or CI infrastructure
+failure.
 
 ## Threat and deployment implications
 
@@ -232,12 +294,18 @@ select a transport, or implement production IPC from this evidence alone.
 
 ## Evidence links
 
-- [Core PR #6](https://github.com/kredoxi/kredoxi/pull/6), current head
-  [`3ca30d9`](https://github.com/kredoxi/kredoxi/commit/3ca30d9ec17527cc877b7cbdfb7a7e895e60a27a)
+- [Core PR #6](https://github.com/kredoxi/kredoxi/pull/6), merged at
+  [`d10dfcf6032cfbbbadf0d874805107fd6fa57061`](https://github.com/kredoxi/kredoxi/commit/d10dfcf6032cfbbbadf0d874805107fd6fa57061)
+  from PR head
+  [`28b2f90014c821d4507092c882987ca1e80d2847`](https://github.com/kredoxi/kredoxi/commit/28b2f90014c821d4507092c882987ca1e80d2847)
 - [Core Phase 4 test-source commit `9cae544`](https://github.com/kredoxi/kredoxi/commit/9cae544d85ececd814e2977f0e32741ec1b9b773)
-- [Core experiment README at current head](https://github.com/kredoxi/kredoxi/blob/3ca30d9ec17527cc877b7cbdfb7a7e895e60a27a/experiments/ipc/README.md)
-- [Core Linux tests at current head](https://github.com/kredoxi/kredoxi/blob/3ca30d9ec17527cc877b7cbdfb7a7e895e60a27a/experiments/ipc/ipc_linux_test.go)
-- [Core Windows tests at current head](https://github.com/kredoxi/kredoxi/blob/3ca30d9ec17527cc877b7cbdfb7a7e895e60a27a/experiments/ipc/ipc_windows_test.go)
+- [Core evidence documentation commit `ac585de`](https://github.com/kredoxi/kredoxi/commit/ac585deb4dde2dd545a78403c7d06f9d827336a5)
+- [Core test-only race fix `6673f2b`](https://github.com/kredoxi/kredoxi/commit/6673f2b96409c8ee099fa5644ea5510975eec7b8)
+- [Core experiment README at merge SHA](https://github.com/kredoxi/kredoxi/blob/d10dfcf6032cfbbbadf0d874805107fd6fa57061/experiments/ipc/README.md)
+- [Core Linux tests at merge SHA](https://github.com/kredoxi/kredoxi/blob/d10dfcf6032cfbbbadf0d874805107fd6fa57061/experiments/ipc/ipc_linux_test.go)
+- [Core Windows tests at merge SHA](https://github.com/kredoxi/kredoxi/blob/d10dfcf6032cfbbbadf0d874805107fd6fa57061/experiments/ipc/ipc_windows_test.go)
 - [Core CI run 41341767034](https://github.com/kredoxi/kredoxi/actions/runs/41341767034)
+- [Final Core PR-head CI run 41350158822](https://github.com/kredoxi/kredoxi/actions/runs/41350158822)
+- [Core default-branch CI run 41350453082](https://github.com/kredoxi/kredoxi/actions/runs/41350453082)
 - [Phase 3 evidence report](native-ipc-identity-evidence.md)
 - [ADR 0002](adr/0002-native-ipc-identity-evaluation.md)

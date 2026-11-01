@@ -200,3 +200,36 @@ Stop and report if source or CI provenance cannot establish a claimed result,
 the verified baseline differs materially from the requested comparison, a
 documentation change would silently change an accepted architecture decision,
 or a required action needs production/privileged access.
+
+### Owner-authorized final integration amendment — Architecture PR #5 only
+
+The owner explicitly authorized merging Core PR #6 first and Architecture PR
+#5 second. Core PR #6 is now merged at `d10dfcf6032cfbbbadf0d874805107fd6fa57061`;
+its exact PR head was `28b2f90014c821d4507092c882987ca1e80d2847`. Its default-
+branch CI run `41350453082` on the merge SHA passed governance, Ubuntu and
+Windows. This authorizes final evidence-chain reconciliation and a conditional
+merge of Architecture PR #5 only after all of the following:
+
+1. Update Phase 4 Architecture evidence to cite Core PR #6's exact final tested
+   source and merge chain, including the test-only `cmd/demo` readiness race
+   fix at `6673f2b96409c8ee099fa5644ea5510975eec7b8`; preserve historical
+   tested revisions and name outcomes accurately.
+2. Explicitly retain the limitation that the three-role Linux case—authorized
+   distinct consumer A reaching broker B without endpoint replacement rights,
+   while unrelated UID U is denied by policy—was not demonstrated. The current
+   `0700` namespace replacement test and `0711` namespace peer-policy test do
+   not combine those outcomes. Keep Windows cross-SID/remote denial unmeasured.
+3. Keep ADR 0002 Proposed/deferred/not accepted, ADR 0001 Accepted/unchanged,
+   and all production code, protocol, transport and identity-enrollment scope
+   unchanged.
+4. Re-run cARL status/doctor/effective/trace and Architecture unit/validator
+   checks. Verify current base, exact updated-head `validate` success, no
+   unresolved review conversations or blockers, and that protection requires
+   `validate` with no approval count unmet.
+5. Only if every gate passes, merge Architecture PR #5 using a repository-
+   supported protected merge method without bypassing checks; read back the
+   merge commit and `main` SHA and verify default-branch Architecture CI.
+
+This amendment supersedes the earlier PR B instruction to leave the new PR
+open only for this explicitly authorized Architecture PR #5 integration. It
+does not authorize any other merge or ADR 0002 acceptance.

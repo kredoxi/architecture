@@ -30,11 +30,15 @@ Go version and executed commands; compiling elsewhere does not establish support
    executable identity, same-account process separation, or Windows
    cross-SID/remote denial. See the [Phase 3 evidence report](native-ipc-identity-evidence.md).
 3. **Phase 4 — workload identity, endpoint trust and deployment isolation
-   (proposed; ADR 0002 not accepted): Core's later synthetic evidence adds
-   Linux broker-endpoint rename/unlink denial for one unrelated UID and fake
-   endpoint acceptance on both platforms. Architecture records the evidence
-   and compares five deployment candidates, but no deployment identity model
-   or transport is selected. The owner must decide whether deployments require
+   (evidence report complete; ADR 0002 remains Proposed/not accepted): Core's
+   merged synthetic evidence adds Linux broker-endpoint rename/unlink denial
+   for one unrelated UID and fake endpoint acceptance on both platforms.
+   Architecture records the source-to-CI evidence chain and compares five
+   deployment candidates, but no deployment identity model or transport is
+   selected. The combined Linux case of an authorized distinct consumer
+   reaching broker B without endpoint replacement rights while unrelated UID
+   U is denied remains unverified; the separate tests do not prove it. The
+   owner must decide whether deployments require
    a dedicated broker and shared or per-workload consumer identities; whether
    clients are local-only; and what enrollment, key custody,
    rotation/revocation, endpoint ownership, install/update/restart/recovery/

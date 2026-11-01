@@ -123,6 +123,13 @@ show same-SID pipe access and duplicated connected-handle reuse, but do not
 measure cross-SID or remote-host denial. These results enforce or expose only
 the tested OS-account/endpoint boundary.
 
+The Linux endpoint results are separate experiments, not one three-principal
+deployment proof: the `0700` broker-owned directory blocks the tested
+unrelated UID from both replacement and traversal, whereas the `0711` peer
+policy setup lets an unrelated UID connect and denies it before provider
+lookup. No authorized distinct UID was shown resolving through the protected
+endpoint while unable to replace it.
+
 Consequently, native IPC alone cannot distinguish applications that share
 the same UID/SID. PID, process name, executable path or an unbound hash does
 not add executable identity. Broker authentication, exact-reference
