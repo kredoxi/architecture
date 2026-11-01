@@ -100,4 +100,6 @@ infrastructure; this repository has not run them. Neither OS peer credentials
 nor mTLS prevents a compromised authorized consumer from reading its own
 resolved secret from memory. See [Proposed ADR 0002](adr/0002-native-ipc-identity-evaluation.md)
 and the [test strategy](testing.md) for the open transport alternatives and
-evidence gates.
+evidence gates. Core PR A reports the limited native synthetic cases that did
+run in the [Phase 3 evidence report](native-ipc-identity-evidence.md); it does
+not establish production controls or executable identity.

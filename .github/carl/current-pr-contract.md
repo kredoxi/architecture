@@ -74,3 +74,44 @@ allowlisted caller may observe `secret_not_found`. No wildcard, listing or
 unauthorised probing is permitted. Preserve the accepted boundary in memory,
 threat model and tests. Keep the PR open/unmerged until CI and remaining review
 gates pass; do not make a check required or expand the MVP.
+
+## Phase 3 Architecture PR B scope amendment
+
+Status: owner-directed research/reporting only; ADR 0002 remains Proposed,
+deferred and not accepted.
+
+### Goal and approved scope
+
+Record and compare the synthetic OS-identity experiment evidence from Core PR A.
+Add `docs/native-ipc-identity-evidence.md`, link it from ADR 0002, and make
+directly related evidence-reference updates to `docs/testing.md`,
+`docs/threat-model.md`, and this durable memory. Add a task-scoped plan at
+`.github/carl/plans/prB-os-identity-evidence.md`.
+
+### Forbidden scope and invariants
+
+Do not accept ADR 0002, change ADR 0001, or select a production transport. Do
+not implement IPC, change Core production code, protocol, resolver, or
+telemetry; create accounts; run privileged tests; or claim executable
+attestation, same-account isolation, combined IPC+mTLS assurance, or
+performance gains. Distinguish tested, configured-only, blocked, and
+unmeasured scenarios. Preserve exact-reference authorization before provider
+lookup and the `policy_denied` / authorized `secret_not_found` boundary.
+
+### Contract assertions and validation
+
+1. Evidence is traceable to Core PR A's source revision, exact native CI runs,
+   commands, operating systems, toolchain, and account model; the current PR
+   head is checked separately from the commit with detailed test evidence.
+2. Each scenario separates expected behavior, observed result, evidence state,
+   and residual risk; no skipped or unavailable case is represented as a pass.
+3. The comparison covers mTLS-only, optional native IPC, replacement, requiring
+   both, and deferral; recommendation does not imply ADR acceptance.
+4. The report identifies identity-model, transport, lifecycle, and remaining
+   cross-SID/remote-denial decisions for the owner.
+
+Run the Architecture workflow's documented `python3 -m unittest discover -s
+tests -v` and `python3 scripts/validate_architecture.py` checks with the
+current cARL effective/status/doctor outputs. Run cARL status, doctor, plan,
+effective and trace checks; inspect the final diff and `git diff --check`.
+Do not run Core code locally from this Architecture checkout.

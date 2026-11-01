@@ -81,12 +81,15 @@ handle inheritance and PID reuse tests on each OS. Hook/loader/VFS/proxy adapter
 must prove the intended operation is intercepted and test bypass/outage, not
 just show a resolver call.
 
-The IPC, distinct-account, anti-tamper and native telemetry cases above are
-future proof gates, not tests run by this architecture repository. Do not claim
-separate OS identities unless the tests ran in authorized disposable
-infrastructure. The current mTLS identity proves key possession; IPC peer
-credentials prove only the OS identity scope documented by each platform.
-Neither establishes that the authorized consumer used or kept a credential safe.
+Core PR A now reports a subset of the IPC account-boundary experiments in the
+[Phase 3 evidence report](native-ipc-identity-evidence.md). Those results do
+not close the remaining proof gates or establish a production transport;
+anti-tamper, native telemetry, Windows cross-SID denial, and actual remote-pipe
+denial remain unmeasured. Do not claim separate OS identities unless tests ran
+in authorized disposable infrastructure. The current mTLS identity proves key
+possession; IPC peer credentials prove only the OS identity scope documented
+by each platform. Neither establishes that the authorized consumer used or
+kept a credential safe.
 
 ## Documentation validation in this repository
 
