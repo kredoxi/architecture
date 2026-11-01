@@ -141,3 +141,95 @@ these gates pass:
 This is a narrow, user-authorized merge-stage amendment; it does not revise
 the evidence acceptance criteria or authorize ADR 0002, production changes,
 or other merges.
+
+## Phase 4 Architecture PR B scope amendment
+
+Status: owner-directed Architecture evidence and decision-package work;
+this amendment supersedes the earlier Phase 3 PR B scope for the current task.
+ADR 0002 remains Proposed/deferred/not accepted.
+The prior one-time merge authorization applied only to Architecture PR #4,
+which is already merged; that authorization is exhausted and does not apply
+to this PR B. Open the new PR and leave it unmerged.
+
+### Goal and approved scope
+
+Produce `docs/phase4-workload-identity-endpoint-trust.md` using independently
+verified Core PR A source, native CI and test output. Compare the five requested
+identity/deployment candidates; distinguish OS principal, endpoint access,
+broker authentication, authorization, transport protection, key custody,
+executable integrity, lifecycle and tamper resistance; analyze endpoint and
+deployment implications; and reconcile ADR 0002, roadmap, threat model, testing
+guidance and durable memory. Create the task plan at
+`.github/carl/plans/prB-workload-identity-endpoint-trust.md`. Mark the earlier
+Phase 3 plan historical. Open the separate Architecture PR and leave it open.
+
+### Forbidden scope and invariants
+
+Do not accept ADR 0002, change ADR 0001, choose or implement a production
+transport or enrollment system, modify Core or production code/protocol/
+telemetry, provision identities, run privileged tests, claim production
+support, or make performance assertions without comparable measurements.
+Do not claim Windows cross-SID or remote-host denial; they remain unmeasured
+unless new direct evidence proves otherwise. Preserve exact-reference
+authorization before provider lookup and ADR 0001's `policy_denied` /
+authorized `secret_not_found` boundary.
+
+### Contract assertions and validation
+
+1. Evidence names exact Core source revisions, CI run/job, OS/runner,
+   Go/toolchain, privilege and account model, command, test and observed result.
+2. Passing, configured-only, blocked, skipped and unmeasured cases remain
+   distinct; no unavailable test is reported as a pass.
+3. The comparison explicitly treats same-account workloads as the same OS
+   principal absent independent evidence, and separates transport/key
+   authentication from authorization and executable integrity.
+4. The operational assessment covers enrollment, rotation/revocation,
+   install/start/restart/recovery/removal and policy rollback without implying
+   those controls exist.
+5. ADR 0002 remains Proposed/deferred/not accepted; ADR 0001 remains Accepted
+   and unchanged; production implementation is out of scope.
+
+Run Architecture unit tests, `scripts/validate_architecture.py`, cARL status,
+doctor, effective-pack and trace diagnostics, link/source/run consistency and
+secret checks, and `git diff --check`. Review the final change and open PR
+without merging. Do not run Core code from this checkout.
+
+### Stop conditions
+
+Stop and report if source or CI provenance cannot establish a claimed result,
+the verified baseline differs materially from the requested comparison, a
+documentation change would silently change an accepted architecture decision,
+or a required action needs production/privileged access.
+
+### Owner-authorized final integration amendment — Architecture PR #5 only
+
+The owner explicitly authorized merging Core PR #6 first and Architecture PR
+#5 second. Core PR #6 is now merged at `d10dfcf6032cfbbbadf0d874805107fd6fa57061`;
+its exact PR head was `28b2f90014c821d4507092c882987ca1e80d2847`. Its default-
+branch CI run `41350453082` on the merge SHA passed governance, Ubuntu and
+Windows. This authorizes final evidence-chain reconciliation and a conditional
+merge of Architecture PR #5 only after all of the following:
+
+1. Update Phase 4 Architecture evidence to cite Core PR #6's exact final tested
+   source and merge chain, including the test-only `cmd/demo` readiness race
+   fix at `6673f2b96409c8ee099fa5644ea5510975eec7b8`; preserve historical
+   tested revisions and name outcomes accurately.
+2. Explicitly retain the limitation that the three-role Linux case—authorized
+   distinct consumer A reaching broker B without endpoint replacement rights,
+   while unrelated UID U is denied by policy—was not demonstrated. The current
+   `0700` namespace replacement test and `0711` namespace peer-policy test do
+   not combine those outcomes. Keep Windows cross-SID/remote denial unmeasured.
+3. Keep ADR 0002 Proposed/deferred/not accepted, ADR 0001 Accepted/unchanged,
+   and all production code, protocol, transport and identity-enrollment scope
+   unchanged.
+4. Re-run cARL status/doctor/effective/trace and Architecture unit/validator
+   checks. Verify current base, exact updated-head `validate` success, no
+   unresolved review conversations or blockers, and that protection requires
+   `validate` with no approval count unmet.
+5. Only if every gate passes, merge Architecture PR #5 using a repository-
+   supported protected merge method without bypassing checks; read back the
+   merge commit and `main` SHA and verify default-branch Architecture CI.
+
+This amendment supersedes the earlier PR B instruction to leave the new PR
+open only for this explicitly authorized Architecture PR #5 integration. It
+does not authorize any other merge or ADR 0002 acceptance.

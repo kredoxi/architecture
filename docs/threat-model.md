@@ -103,3 +103,40 @@ and the [test strategy](testing.md) for the open transport alternatives and
 evidence gates. Core PR A reports the limited native synthetic cases that did
 run in the [Phase 3 evidence report](native-ipc-identity-evidence.md); it does
 not establish production controls or executable identity.
+
+## Phase 4 endpoint and workload-identity evidence (research only)
+
+The [Phase 4 report](phase4-workload-identity-endpoint-trust.md) records
+additional synthetic endpoint tests from Core PR A. Both native fake-endpoint
+tests accept a synthetic response from an attacker-created socket/pipe because
+the experiment client does not authenticate the broker. The request discloses
+the reference and false identity claims but contains no credential or private
+key; this is endpoint-trust/metadata evidence, not a production credential
+theft result. Endpoint names, DACLs and random names are not server
+authentication.
+
+Linux's tested unrelated UID could not rename or unlink a socket inside the
+broker-owned `0700` directory even when the socket mode was `0666`; the
+directory's full ancestry, mounts, namespaces and group behavior were not
+audited. A same-UID process successfully replaced the pathname. Windows tests
+show same-SID pipe access and duplicated connected-handle reuse, but do not
+measure cross-SID or remote-host denial. These results enforce or expose only
+the tested OS-account/endpoint boundary.
+
+The Linux endpoint results are separate experiments, not one three-principal
+deployment proof: the `0700` broker-owned directory blocks the tested
+unrelated UID from both replacement and traversal, whereas the `0711` peer
+policy setup lets an unrelated UID connect and denies it before provider
+lookup. No authorized distinct UID was shown resolving through the protected
+endpoint while unable to replace it.
+
+Consequently, native IPC alone cannot distinguish applications that share
+the same UID/SID. PID, process name, executable path or an unbound hash does
+not add executable identity. Broker authentication, exact-reference
+authorization, channel protection, key custody, workload enrollment,
+executable integrity, lifecycle and anti-tamper remain separate controls.
+No combined IPC+mTLS, production workload identity, key rotation/revocation,
+policy rollback, application consumption, performance, or privileged-attacker
+test is established. ADR 0002 remains Proposed/deferred; see its Phase 4
+decision package and the [roadmap](roadmap.md) for unresolved deployment
+choices.

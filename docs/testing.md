@@ -91,6 +91,25 @@ possession; IPC peer credentials prove only the OS identity scope documented
 by each platform. Neither establishes that the authorized consumer used or
 kept a credential safe.
 
+The [Phase 4 workload-identity and endpoint-trust report](phase4-workload-identity-endpoint-trust.md)
+records Core PR A's later fake-endpoint and Linux endpoint-namespace tests.
+The fake Linux/Windows servers return synthetic values that the experiment
+clients accept without broker authentication; their requests contain a
+reference and false identity claims, not a credential or private key. Linux's
+existing unrelated UID was denied rename/unlink against the tested
+broker-owned `0700` directory, while a same-UID process can replace the
+pathname. Windows evidence remains same-SID only; cross-SID and remote-host
+denial were not measured. These are native test-only observations, not proof
+of a production endpoint, workload identity, executable identity, enrollment
+or lifecycle control. Apply the report's deployment identity model and
+evidence-state distinctions when reviewing future tests.
+
+The combined Linux three-role case remains unverified: the `0700` parent
+replacement test also blocks unrelated-UID traversal, while the separate
+`0711` peer-policy test allows an unrelated UID to connect and denies it before
+provider lookup. Neither demonstrates an authorized distinct consumer
+resolving through the broker-owned endpoint while unable to replace it.
+
 ## Documentation validation in this repository
 
 Review R01-R14 against this matrix and the PR's A1-A5 assertions. Check local

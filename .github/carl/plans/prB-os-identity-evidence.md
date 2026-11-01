@@ -2,7 +2,8 @@
 
 ## Plan metadata
 
-- Status: active; documentation and evidence reconciliation only
+- Status: complete; historical Phase 3 evidence plan, superseded for new work by
+  `prB-workload-identity-endpoint-trust.md`
 - Author: Copilot
 - Created: 2026-11-01
 - Last updated: 2026-11-01

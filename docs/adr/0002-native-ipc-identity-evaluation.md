@@ -154,6 +154,49 @@ The owner-directed Phase 3 results and comparison are recorded in the
 That report is research evidence only; this ADR remains Proposed, deferred and
 not accepted.
 
+### Phase 4 evidence and decision package (research only)
+
+The [Phase 4 workload-identity, endpoint-trust and deployment-isolation
+report](../phase4-workload-identity-endpoint-trust.md) records the current
+Core experiment source and native CI evidence. Core PR #6 merged at
+[`d10dfcf6032cfbbbadf0d874805107fd6fa57061`](https://github.com/kredoxi/kredoxi/commit/d10dfcf6032cfbbbadf0d874805107fd6fa57061)
+from PR head
+[`28b2f90014c821d4507092c882987ca1e80d2847`](https://github.com/kredoxi/kredoxi/commit/28b2f90014c821d4507092c882987ca1e80d2847).
+The Phase 4 test source is commit
+[`9cae544d85ececd814e2977f0e32741ec1b9b773`](https://github.com/kredoxi/kredoxi/commit/9cae544d85ececd814e2977f0e32741ec1b9b773);
+the unrelated demo-test synchronization correction is
+[`6673f2b96409c8ee099fa5644ea5510975eec7b8`](https://github.com/kredoxi/kredoxi/commit/6673f2b96409c8ee099fa5644ea5510975eec7b8).
+The final PR-head and merged default-branch runs passed; see the report for
+exact check/job IDs, the initial race-sensitive test failure and retry, and
+the source-to-run chain.
+
+The report separates endpoint access from broker authentication and workload
+identity, and compares five deployment candidates. Its Linux three-role
+scenario—an authorized distinct consumer reaching broker B without endpoint
+replacement rights while unrelated UID U is denied by policy—remains
+unverified; the separate `0700` endpoint and `0711` peer-policy tests do not
+prove that combined outcome. Windows cross-SID and remote-host denial,
+production enrollment/key lifecycle, combined IPC+mTLS enforcement,
+application consumption, and comparative performance also remain unmeasured.
+
+The Phase 4 fake-endpoint tests show that the isolated test client accepts a
+synthetic response from an attacker-created socket/pipe without authenticating
+the broker; the request exposes a reference but no credential or private key.
+Linux same-account endpoint replacement and Windows same-SID access/duplicated
+handle reuse confirm that these OS-account boundaries do not distinguish
+applications sharing the same UID/SID. The tested Linux broker-owned `0700`
+directory blocks replacement by the existing unrelated UID in that setup, but
+its ancestor directories, mounts, groups and deployment configuration were
+not generally validated.
+
+**Disposition for owner review: defer a transport decision and keep this ADR
+Proposed.** The tests do not establish executable identity, the combined
+three-role Linux account boundary, an independent IPC+mTLS defense, a
+production workload-enrollment design, or comparable Windows
+cross-SID/remote enforcement. The report's candidate matrix and open questions
+are decision evidence, not an accepted decision or implementation
+authorization. ADR 0001 remains Accepted and unchanged.
+
 ## Deployment, integrity and anti-tamper requirements
 
 Any later OS-native transport proposal must specify least-privilege service
