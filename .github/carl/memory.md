@@ -77,14 +77,22 @@ Configured limits are documented in docs/contracts.md. Future owned-byte
 provider lifecycle and additional hardening remain proposals. Reconcile
 cross-repository drift without claiming unexecuted tests or unsupported fields.
 
-Core PR A's synthetic native IPC experiments provide limited OS-account
-evidence: Linux CI observed cross-UID pathname-socket permission and
-`SO_PEERCRED` policy denial, while a copied synthetic mTLS key remained usable
-by a different UID. Windows native tests observed same-SID pipe access,
+Core's synthetic native IPC experiments provide limited OS-account evidence:
+Linux CI observed cross-UID pathname-socket permission and `SO_PEERCRED` policy
+denial, a broker-owned `0700` endpoint directory blocking rename/unlink by the
+existing unrelated UID, and a copied synthetic mTLS key remaining usable by a
+different UID. A same-UID process can replace the Linux socket pathname.
+Windows native tests observed same-SID pipe access,
 impersonation/restoration and duplicated-handle reuse; cross-SID and remote
-denial were not measured. No combined IPC+mTLS test or executable attestation
-exists. See [the Architecture evidence report](../../docs/native-ipc-identity-evidence.md);
-ADR 0002 remains Proposed and no transport is selected.
+denial were not measured. The Phase 4 fake-endpoint tests show that the
+experiment clients accept a synthetic response without authenticating the
+broker; requests expose the reference but contain no credential/private key.
+Native IPC therefore establishes no application identity for processes
+sharing a UID/SID. No combined IPC+mTLS test, production workload enrollment,
+key lifecycle, or executable attestation exists. See the [Phase 3 evidence
+report](../../docs/native-ipc-identity-evidence.md) and [Phase 4 workload
+identity and endpoint trust report](../../docs/phase4-workload-identity-endpoint-trust.md).
+ADR 0002 remains Proposed/deferred and no transport is selected.
 
 <!-- BEGIN GENERATED: reconcile -->
 ## Repository snapshot

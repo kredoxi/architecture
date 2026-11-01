@@ -7,7 +7,8 @@
 | Architecture documents | Grammar/wire/policy reconciled to core session report | Review evolving contracts against core test evidence |
 | Go explicit resolver/mTLS | Core session reports working demo/tests; not executed here | Publish reproducible core evidence and adversarial matrix |
 | Windows | Documentation/governance prepared on Windows | Build/run actual consumer/broker; cert/filesystem/permission tests |
-| Linux | Source-backed IPC/peer-identity research; no IPC implementation or distinct-account test | Choose transport only after owner review; verify pathname socket ownership, SO_PEERCRED and PID/TOCTOU behavior in disposable infrastructure |
+| Linux | Core synthetic IPC experiments pass native CI for `SO_PEERCRED`, unrelated-UID policy denial, and a broker-owned `0700` endpoint directory blocking rename/unlink by the existing `nobody` UID; no production IPC or service identity | Keep account-level findings scoped to the tested directory, UID, mount and runner. Parent/mount ancestry, group effects, deployment lifecycle and workload identity remain unverified |
+| Windows | Core synthetic native tests pass for same-SID pipe access, impersonation/restoration, cancellation, fake-endpoint acceptance and duplicated-handle reuse; no production IPC or service identity | Cross-SID DACL denial and actual remote-host denial remain unmeasured; require authorized disposable Windows identities/host before claiming either |
 | macOS | Go transport portability is a design expectation | Runtime compatibility, cert/filesystem checks; separate native IPC research |
 | Containers/Kubernetes | Research only | Workload identity, mounted-IPC/RBAC/volume and host-boundary tests |
 | Hooks/loaders/VFS/drivers/proxies | Evaluated, not supported | Named application/platform experiments and explicit ADR |
@@ -21,29 +22,38 @@ Go version and executed commands; compiling elsewhere does not establish support
 1. **Synthetic explicit vertical slice:** align parser/policy/provider/wire/events,
    prove allowed/denied mTLS access, no config/log leakage, outage and Tier 3
    limits. Mark synthetic components development-only.
-2. **OS service/IPC isolation (proposed):** first evaluate native peer IPC as a
-   possible alternative same-host transport against the current mTLS reference,
-   as directed in [Proposed ADR 0002](adr/0002-native-ipc-identity-evaluation.md).
-   This research priority does not approve a second production transport,
-   non-local access or replacement of mTLS; seek architectural approval only
-   after reproducible comparative evidence and recommendation.
-   Linux pathname socket/kernel peer credentials and Windows named-pipe
-   DACL/token verification require separate implementations and disposable
-   distinct-identity tests. Provision least-privilege broker identity; test
-   endpoint ownership, impersonation, handle inheritance, PID/TOCTOU and
-   same-user limits. No OS identity or executable-integrity guarantee is
-   implied before those tests pass.
-3. **Practical adapters:** one documented configuration loader; handle-based
+2. **Phase 3 — native OS-identity evidence (research complete; limited):**
+   Core's earlier synthetic Linux/Windows IPC experiments establish only the
+   named account-level behaviors: Linux `SO_PEERCRED`/pathname permission and
+   copied-key cases, plus Windows same-SID access, impersonation/restoration,
+   cancellation and handle tests. They do not establish production IPC,
+   executable identity, same-account process separation, or Windows
+   cross-SID/remote denial. See the [Phase 3 evidence report](native-ipc-identity-evidence.md).
+3. **Phase 4 — workload identity, endpoint trust and deployment isolation
+   (proposed; ADR 0002 not accepted): Core's later synthetic evidence adds
+   Linux broker-endpoint rename/unlink denial for one unrelated UID and fake
+   endpoint acceptance on both platforms. Architecture records the evidence
+   and compares five deployment candidates, but no deployment identity model
+   or transport is selected. The owner must decide whether deployments require
+   a dedicated broker and shared or per-workload consumer identities; whether
+   clients are local-only; and what enrollment, key custody,
+   rotation/revocation, endpoint ownership, install/update/restart/recovery/
+   removal and policy rollback controls are required. Windows cross-SID and
+   actual remote denial remain unmeasured. Do not claim production controls,
+   support or performance, and do not implement a transport until the owner
+   accepts an explicit identity model and ADR. See the [Phase 4 evidence
+   report](phase4-workload-identity-endpoint-trust.md).
+4. **Practical adapters:** one documented configuration loader; handle-based
    launcher avoiding env/argv; narrow credential-injecting proxy if justified.
    Measure startup/request cost, rotation, compatibility and bypass.
-4. **Production provider readiness:** choose encrypted local store or one
+5. **Production provider readiness:** choose encrypted local store or one
    enterprise provider based on need; separate trust keys, enrollment, policy
    integrity/anti-rollback decision, expiry/revocation and recovery. No provider
    breadth for appearances.
-5. **Selected interception research:** named hook/loader/VFS target, OS-supported
+6. **Selected interception research:** named hook/loader/VFS target, OS-supported
    enforcement only where justified, disposable tests. Preserve explicit
    fallback errors and prove the actual read boundary.
-6. **Operational/release readiness:** map the versioned event contract to
+7. **Operational/release readiness:** map the versioned event contract to
    journald/syslog or Windows Event Log/ETW and validate collector ingestion,
    loss, retention and redaction; add an independent health observer; establish
    binary/configuration integrity, policy anti-rollback and recovery evidence;

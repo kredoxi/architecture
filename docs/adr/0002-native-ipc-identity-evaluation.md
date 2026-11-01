@@ -154,6 +154,33 @@ The owner-directed Phase 3 results and comparison are recorded in the
 That report is research evidence only; this ADR remains Proposed, deferred and
 not accepted.
 
+### Phase 4 evidence and decision package (research only)
+
+The [Phase 4 workload-identity, endpoint-trust and deployment-isolation
+report](../phase4-workload-identity-endpoint-trust.md) records the current
+Core experiment source and native CI evidence, separates endpoint access from
+broker authentication and workload identity, and compares five deployment
+candidates. It also documents what is not measured: Windows cross-SID and
+remote-host denial, production enrollment/key lifecycle, combined IPC+mTLS
+enforcement, application consumption, and comparative performance.
+
+The Phase 4 fake-endpoint tests show that the isolated test client accepts a
+synthetic response from an attacker-created socket/pipe without authenticating
+the broker; the request exposes a reference but no credential or private key.
+Linux same-account endpoint replacement and Windows same-SID access/duplicated
+handle reuse confirm that these OS-account boundaries do not distinguish
+applications sharing the same UID/SID. The tested Linux broker-owned `0700`
+directory blocks replacement by the existing unrelated UID in that setup, but
+its ancestor directories, mounts, groups and deployment configuration were
+not generally validated.
+
+**Disposition for owner review: defer a transport decision and keep this ADR
+Proposed.** The tests do not establish executable identity, an independent
+IPC+mTLS defense, a production workload-enrollment design, or comparable
+Windows cross-SID/remote enforcement. The report's candidate matrix and open
+questions are decision evidence, not an accepted decision or implementation
+authorization. ADR 0001 remains Accepted and unchanged.
+
 ## Deployment, integrity and anti-tamper requirements
 
 Any later OS-native transport proposal must specify least-privilege service
