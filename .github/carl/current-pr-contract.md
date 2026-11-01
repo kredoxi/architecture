@@ -74,3 +74,70 @@ allowlisted caller may observe `secret_not_found`. No wildcard, listing or
 unauthorised probing is permitted. Preserve the accepted boundary in memory,
 threat model and tests. Keep the PR open/unmerged until CI and remaining review
 gates pass; do not make a check required or expand the MVP.
+
+## Phase 3 Architecture PR B scope amendment
+
+Status: owner-directed research/reporting only; ADR 0002 remains Proposed,
+deferred and not accepted.
+
+### Goal and approved scope
+
+Record and compare the synthetic OS-identity experiment evidence from Core PR A.
+Add `docs/native-ipc-identity-evidence.md`, link it from ADR 0002, and make
+directly related evidence-reference updates to `docs/testing.md`,
+`docs/threat-model.md`, and this durable memory. Add a task-scoped plan at
+`.github/carl/plans/prB-os-identity-evidence.md`.
+
+### Forbidden scope and invariants
+
+Do not accept ADR 0002, change ADR 0001, or select a production transport. Do
+not implement IPC, change Core production code, protocol, resolver, or
+telemetry; create accounts; run privileged tests; or claim executable
+attestation, same-account isolation, combined IPC+mTLS assurance, or
+performance gains. Distinguish tested, configured-only, blocked, and
+unmeasured scenarios. Preserve exact-reference authorization before provider
+lookup and the `policy_denied` / authorized `secret_not_found` boundary.
+
+### Contract assertions and validation
+
+1. Evidence is traceable to Core PR A's source revision, exact native CI runs,
+   commands, operating systems, toolchain, and account model; the current PR
+   head is checked separately from the commit with detailed test evidence.
+2. Each scenario separates expected behavior, observed result, evidence state,
+   and residual risk; no skipped or unavailable case is represented as a pass.
+3. The comparison covers mTLS-only, optional native IPC, replacement, requiring
+   both, and deferral; recommendation does not imply ADR acceptance.
+4. The report identifies identity-model, transport, lifecycle, and remaining
+   cross-SID/remote-denial decisions for the owner.
+
+Run the Architecture workflow's documented `python3 -m unittest discover -s
+tests -v` and `python3 scripts/validate_architecture.py` checks with the
+current cARL effective/status/doctor outputs. Run cARL status, doctor, plan,
+effective and trace checks; inspect the final diff and `git diff --check`.
+Do not run Core code locally from this Architecture checkout.
+
+### Owner-authorized final integration amendment
+
+The owner has independently confirmed Core PR #5 merged to Core `main` at
+`0c465c56a6732265bdad8ec3eba143a11b2a9895`, with default-branch CI run
+41338072128 successful. This amendment supersedes the earlier "keep PR open
+and unmerged" instruction only for Architecture PR #4 and only after all of
+these gates pass:
+
+1. Update the report's current-source references to the merged Core revision,
+   retaining historical exact tested revisions and CI provenance.
+2. Verify the final Windows cancellation and impersonation regression names,
+   native PR-head and main-branch results, and remaining skip/limits directly
+   against source and CI.
+3. Keep ADR 0001 Accepted and unchanged, ADR 0002 Proposed/deferred/not
+   accepted, and all production code unchanged.
+4. Re-run cARL diagnostics, all Architecture validation and the required
+   `validate` check on the updated PR head; confirm base freshness, no review
+   blockers and that branch protection permits merge.
+5. Only then merge Architecture PR #4 using a repository-supported protected
+   merge method and verify the resulting merge commit, `main` SHA and
+   default-branch Architecture CI.
+
+This is a narrow, user-authorized merge-stage amendment; it does not revise
+the evidence acceptance criteria or authorize ADR 0002, production changes,
+or other merges.

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "_note": "Repository map derived by `carl map`. Re-run to update after structural changes.",
   "generated_by": "carl map",
-  "last_updated": "2026-10-31",
+  "last_updated": "2026-11-01",
   "languages": [
     "Python"
   ],

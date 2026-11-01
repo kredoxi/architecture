@@ -149,6 +149,11 @@ beyond either alone. Return reproducible evidence and a comparative
 recommendation before seeking architectural approval. Do not enable a second
 production transport or non-local access during this research.
 
+The owner-directed Phase 3 results and comparison are recorded in the
+[practical OS-identity evidence report](../native-ipc-identity-evidence.md).
+That report is research evidence only; this ADR remains Proposed, deferred and
+not accepted.
+
 ## Deployment, integrity and anti-tamper requirements
 
 Any later OS-native transport proposal must specify least-privilege service
