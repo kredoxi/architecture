@@ -25,16 +25,22 @@ executable attestation.
 
 | Evidence | Revision / environment | What it establishes |
 |---|---|---|
-| [Core PR A](https://github.com/kredoxi/kredoxi/pull/5), current head | `9b201887eb75c4b85eafc0ed86e8c2f077655859`; experiment README and sources at that revision | The published scenario inventory and current source state |
-| [Detailed native CI run 41329082490](https://github.com/kredoxi/kredoxi/actions/runs/41329082490) | Test commit `dcd43347dc9ec350e1d1ae9c536608cf8669ee35`; Go 1.27.3; jobs `governance` (124915176485), `test (ubuntu-latest)` (124915176698), and `test (windows-latest)` (124915176717) | Detailed run recorded by Core PR A for the experiment source |
-| [Current-head CI run 41329564731](https://github.com/kredoxi/kredoxi/actions/runs/41329564731) | Exact current Core PR head `9b201887eb75c4b85eafc0ed86e8c2f077655859`; `governance` (124916614814), `test (ubuntu-latest)` (124916615130), and `test (windows-latest)` (124916615097) all successful | Current head's checks pass |
+| [Initial detailed native CI run 41329082490](https://github.com/kredoxi/kredoxi/actions/runs/41329082490) | Test commit `dcd43347dc9ec350e1d1ae9c536608cf8669ee35`; Go 1.27.3; jobs `governance` (124915176485), `test (ubuntu-latest)` (124915176698), and `test (windows-latest)` (124915176717) | Historical detailed evidence for the initial experiment source |
+| [Initial PR-head CI run 41329564731](https://github.com/kredoxi/kredoxi/actions/runs/41329564731) | Core PR #5 head `9b201887eb75c4b85eafc0ed86e8c2f077655859`; `governance` (124916614814), `test (ubuntu-latest)` (124916615130), and `test (windows-latest)` (124916615097) all successful | Historical checks for the earlier PR revision used by the original report |
+| [Final Core PR #5 head](https://github.com/kredoxi/kredoxi/commit/0a7ade6282ee5effc33954eee801509fc81d90cb) | PR head `0a7ade6282ee5effc33954eee801509fc81d90cb`; includes Windows overlapped-I/O cancellation and restoration-order hardening | Final reviewed experiment source before merge |
+| [Core PR-head CI run 41337784450](https://github.com/kredoxi/kredoxi/actions/runs/41337784450) | Exact PR head `0a7ade6282ee5effc33954eee801509fc81d90cb`; `governance` (124941175765), `test (ubuntu-latest)` (124941176024), and `test (windows-latest)` (124941176069) all successful | Native Linux/Windows tests, race/fuzz where supported, and governance on the final PR head |
+| [Core PR #5](https://github.com/kredoxi/kredoxi/pull/5), merged | Merged 2026-11-01T18:43:30Z; merge commit `0c465c56a6732265bdad8ec3eba143a11b2a9895`; same experiment tree as final PR head | Establishes the final source revision on Core main |
+| [Core main CI run 41338072128](https://github.com/kredoxi/kredoxi/actions/runs/41338072128) | Exact Core main merge commit `0c465c56a6732265bdad8ec3eba143a11b2a9895`; `governance` (124942039957), `test (windows-latest)` (124942040204), and `test (ubuntu-latest)` (124942040212) all successful | Post-merge default-branch verification |
 
-The GitHub comparison between `dcd43347dc9ec350e1d1ae9c536608cf8669ee35`
-and the current head shows only `experiments/ipc/README.md` changed after the
-detailed native run. The experiment code and tests were therefore unchanged
-between that run and the current head. Current-head CI is still reported
-separately rather than attributing the earlier detailed logs to the newer
-commit.
+The original report's run 41329082490 belongs to commit `dcd4334`; later
+run 41329564731 belongs to `9b20188`. Core PR #5 then added commit
+`e4b5484` ("Harden Windows IPC experiment cleanup") and finalized its head at
+`0a7ade6`. The compare from `9b201887eb75c4b85eafc0ed86e8c2f077655859` to
+that final head shows changes to the task contract/plan, experiment README, and
+Windows experiment source. Therefore the original detailed Windows assertions
+are historical; the final Windows changes are validated by run 41337784450
+and were rerun on main by 41338072128. The merge commit has no file changes
+relative to the tested final PR head, and current main CI is separately cited.
 
 The reproducible experiment command is:
 
@@ -42,29 +48,35 @@ The reproducible experiment command is:
 go test ./experiments/ipc -count=1 -v
 ```
 
-Core also reports `go test ./... -count=1`, `go build ./...`, `go vet ./...`,
-`govulncheck`, formatting checks, Linux `go test -race ./...`, and two
-five-second resolver fuzz runs as passing in the documented run. The Core
-README does not give the exact fuzz command lines; this report does not infer
-them. The Windows race step was skipped in CI and was unavailable locally
-because the Windows host had `CGO_ENABLED=0` and no GCC.
+At both final-head run 41337784450 and default-branch run 41338072128, Core
+reports `go test ./...`, `go build ./...`, `go vet ./...`, `govulncheck`,
+formatting checks and build-integrity checks passing. Native Linux race and
+two five-second resolver fuzz jobs passed. The Windows race/fuzz job was
+skipped by workflow design; the Windows README also documents that a local
+race run was unavailable because that host had `CGO_ENABLED=0` and no GCC.
+The exact fuzz command lines are visible in the Linux CI job logs, rather than
+inferred from the README.
 
 ## Environment and identity model
 
 **Linux:** native GitHub Actions `ubuntu-latest` runner; the job log identifies
-Ubuntu 24.04.5 LTS / `ubuntu-24.04`. Go 1.27.3. Cross-UID cases used the
-already-existing `nobody` account via passwordless `sudo -n -u nobody`; no
-account was created or modified. The test used a traversable `0711` parent
-with a `0600` socket for kernel permission denial, then a `0666` socket to
-exercise broker policy from the actual `SO_PEERCRED` UID. These are disposable
-CI test settings, not deployment recommendations or guarantees.
+Ubuntu 24.04.5 LTS / `ubuntu-24.04`. Go 1.27.3. In both final PR-head run
+41337784450 and main run 41338072128, the cross-UID cases passed using the
+already-existing `nobody` account via passwordless `sudo -n -u nobody`; the
+job logs showed no skip. No account was created or modified. The test used a
+traversable `0711` parent with a `0600` socket for kernel permission denial,
+then a `0666` socket to exercise broker policy from the actual `SO_PEERCRED`
+UID. These are disposable CI test settings, not deployment recommendations
+or guarantees.
 
-**Windows:** the local native experiment environment is documented as Windows
-NT `10.0.26300.0`, Go 1.27.3, `windows/amd64`. Native `windows-latest` CI also
-passed. The named-pipe DACL was scoped to the current user SID; helper-process
-tests ran under the same authorized SID. No separate Windows account/SID or
-remote Windows host was available for a denial test. The remote-client-reject
-flag was configured, not shown to reject an actual remote connection.
+**Windows:** the local experiment environment is documented as Windows NT
+`10.0.26300.0`, Go 1.27.3, `windows/amd64`. Native `windows-latest` CI on both
+final PR head `0a7ade6` and merged main `0c465c5` passed the same-SID, token
+restoration and overlapped-cancellation regression tests. The named-pipe DACL
+was scoped to the current user SID; helper-process tests ran under the same
+authorized SID. No separate Windows account/SID or remote Windows host was
+available for a denial test. The remote-client-reject flag was configured,
+not shown to reject an actual remote connection.
 
 No experiment used real credentials, persistent accounts, or privileged
 attacker access. Linux used passwordless switching only to the already-existing
@@ -75,27 +87,28 @@ changed. No simulated cross-account identity was substituted.
 
 | Scenario | Expected | Observed | Evidence state and residual risk |
 |---|---|---|---|
-| Exact-reference policy and provider order | Deny unallowed references before provider lookup; an authorized missing reference may reach the provider and return `secret_not_found`. | Common request/policy tests passed on native Linux and Windows; denied requests recorded zero lookups and authorized missing references one lookup. | **Observed** in the synthetic test protocol only. Does not itself validate the production wire/API. |
-| Linux peer identity and forged fields | Derive UID/GID/PID from `SO_PEERCRED`; request-supplied identity does not override it. | Native Linux tests passed, including exact-UID denial with `0666` socket access. | **Observed** for connected socket credentials and test policy. UID is an account boundary, not code identity. |
-| Linux endpoint permissions | With a traversable `0711` parent and `0600` socket, a different UID cannot connect. | Cross-UID test using existing `nobody` passed; the detailed run reported no skip. | **Observed** OS permission denial in that setup. It depends on trusted ownership and parent-directory integrity. |
-| Linux copied-key mTLS comparison | A process given the synthetic enrolled key can authenticate independently of its OS UID. | The `nobody` helper successfully used a copied synthetic mTLS key in a separate process. | **Observed** key-possession behavior. This is not a combined IPC+mTLS test; a key accessible to an attacker remains reusable. |
-| Linux same-account process and endpoint substitution | Same UID can use the authorized account boundary; test whether it can replace a pathname endpoint. | Same-account helper resolved; a same-account actor replaced the socket pathname and a client following it reached the replacement. | **Observed** same-account access and endpoint substitution. Path protections do not separate processes sharing directory-write access. |
-| Linux pre-existing/stale endpoint and cleanup | Refuse occupied paths and avoid deleting a substituted path during cleanup. | The experiment README reports native tests passed. | **Observed** only for tested lifecycle cases; no claim about every filesystem race or deployment lifecycle. |
-| Windows named-pipe DACL and same-SID helper | Explicit current-SID DACL permits a same-SID helper and OS token identity, not request fields, supplies the caller SID. | Native Windows same-account peer-identity test passed. | **Observed** same-SID access. Different-SID denial was **not measured**. |
-| Windows impersonation failure | Failure fails closed without provider lookup or broker-token leakage. | Invalid-handle impersonation failure returned denial and the test passed without provider access. | **Observed** for the injected invalid-handle failure; a distinct real OS impersonation failure was not induced. |
-| Windows successful impersonation/restoration | Observe the client SID for the request, then restore broker thread/process context. | Native tests observed the client SID and verified restoration. | **Observed** token context behavior; it does not attest client code. |
-| Windows pipe name and connected handles | Reject an occupied first-instance name; demonstrate name reuse after close and whether a connected handle can be duplicated. | First-instance/name reuse and duplicated connected-handle tests passed; the duplicated handle retained access. | **Observed**. Possession of a connected handle remains a reusable capability. |
-| Windows remote-client rejection | An actual remote Windows client is denied. | Only `PIPE_REJECT_REMOTE_CLIENTS` configuration was verified. The native test explicitly skipped because no separate authorized remote host was available. | **Configured only / not measured**; do not claim remote denial. |
+| Exact-reference policy and provider order | Deny unallowed references before provider lookup; an authorized missing reference may reach the provider and return `secret_not_found`. | `TestRequestValidationAndAuthorizationOrder` passed on native Linux and Windows in final-head run 41337784450 and main run 41338072128; denied requests recorded zero lookups and authorized missing references one lookup. | **Observed** in the synthetic test protocol only. Does not itself validate the production wire/API. |
+| Linux peer identity and forged fields | Derive UID/GID/PID from `SO_PEERCRED`; request-supplied identity does not override it. | `TestLinuxPolicyDenialPrecedesLookup` and `TestLinuxSocketOwnerModesAndPeerIdentity` passed in native Linux runs 41337784450 and 41338072128. | **Observed** for connected socket credentials and test policy. UID is an account boundary, not code identity. |
+| Linux endpoint permissions | With a traversable `0711` parent and `0600` socket, a different UID cannot connect. | `TestLinuxDifferentUIDBlockedBySocketMode` passed in both final-head and main Linux jobs; no skip. | **Observed** OS permission denial in that setup. It depends on trusted ownership and parent-directory integrity. |
+| Linux copied-key mTLS comparison | A process given the synthetic enrolled key can authenticate independently of its OS UID. | `TestLinuxCopiedSyntheticMTLSKeyWorksFromDifferentUID` passed in runs 41337784450 and 41338072128. | **Observed** key-possession behavior. This is not a combined IPC+mTLS test; a key accessible to an attacker remains reusable. |
+| Linux same-account process and endpoint substitution | Same UID can use the authorized account boundary; test whether it can replace a pathname endpoint. | `TestLinuxSameAccountCanReplacePathnameEndpoint` passed in both native Linux runs. | **Observed** same-account access and endpoint substitution. Path protections do not separate processes sharing directory-write access. |
+| Linux pre-existing/stale endpoint and cleanup | Refuse occupied paths and avoid deleting a substituted path during cleanup. | `TestLinuxEndpointPrecreationAndStalePathFailClosed` passed in both final-head and main Linux jobs. | **Observed** only for tested lifecycle cases; no claim about every filesystem race or deployment lifecycle. |
+| Windows named-pipe DACL and same-SID helper | Explicit current-SID DACL permits a same-SID helper and OS token identity, not request fields, supplies the caller SID. | `TestWindowsPipeDACLAndSameAccountPeerIdentity` passed in native Windows final-head run 41337784450 and main run 41338072128. | **Observed** same-SID access. Different-SID denial was **not measured**. |
+| Windows impersonation failure | Failure fails closed without provider lookup or broker-token leakage. | `TestWindowsImpersonationFailureFailsClosed` passed on final PR head and main; it exercises an invalid handle. | **Observed** for the injected invalid-handle failure; a distinct real OS impersonation failure was not induced. |
+| Windows successful impersonation/restoration | Observe the client SID for the request, then restore broker thread/process context. | Same-SID test and `TestWindowsRestorationIsVerifiedBeforeThreadUnlock` passed in native Windows runs 41337784450 and 41338072128. | **Observed** token context/order behavior; no real `RevertToSelf` failure was induced and this does not attest client code. |
+| Windows overlapped timeout and cancellation | Cancel a timed-out pipe I/O and wait for terminal completion before releasing OVERLAPPED/event/buffer resources. | `TestWindowsOverlappedReadTimeoutWaitsForCancellation` creates a real pending read, times it out, and confirms the client can write after cancellation. It passed in both final-head and main Windows jobs. | **Observed** cancellation/completion ordering. Completion drain has no upper time bound; an OS operation that never completes can hold the caller indefinitely. |
+| Windows pipe name and connected handles | Reject an occupied first-instance name; demonstrate name reuse after close and whether a connected handle can be duplicated. | `TestWindowsPipeFirstInstanceAndNameReuse` and `TestWindowsDuplicatedClientHandleRetainsAccess` passed in both final-head and main Windows jobs. | **Observed**. Possession of a connected handle remains a reusable capability. |
+| Windows remote-client rejection | An actual remote Windows client is denied. | `TestWindowsRemotePipeDenialFlagIsConfigured` explicitly skipped in both final-head and main Windows jobs because no separate authorized remote host was available. | **Configured only / not measured**; do not claim remote denial. |
 | Windows cross-SID denial | A client under a different SID is denied by the pipe DACL. | No separate Windows account/SID was available. | **Blocked / not measured**; no simulated identity substituted. |
 | Malformed, duplicate, oversized, trailing, and concurrent requests | Reject invalid frames; preserve exact policy under concurrency and keep denied requests from provider lookup. | Shared malformed-input, policy, and concurrency tests passed on native platforms. | **Observed** in the bounded experiment protocol, not a production protocol conformance result. |
 | Combined IPC and mTLS | If both are required, show a specific additional protection beyond either mechanism. | No combined authentication design was implemented or measured. | **Not measured**. No independent-factor or defense-in-depth claim is justified. |
 
-The Core experiment README and native test suite are the source for scenario
-details. The Linux cross-UID results above are limited to the exact `nobody`,
-socket-mode, and test-policy configurations; they do not prove process
-integrity. The Windows CI log at the current PR head confirms the same-SID,
-impersonation, handle, lifecycle and concurrent test passes and explicitly
-records the remote-denial skip.
+The [merged Core README and native tests](https://github.com/kredoxi/kredoxi/tree/0c465c56a6732265bdad8ec3eba143a11b2a9895/experiments/ipc)
+are the final source for scenario details. The Linux cross-UID results above
+are limited to the exact `nobody`, socket-mode, and test-policy configurations;
+they do not prove process integrity. The final PR-head and main Windows CI logs
+confirm the named cancellation/restoration regressions passed and explicitly
+record the remote-denial skip.
 
 ## Implemented, tested, and untested boundaries
 
@@ -107,6 +120,16 @@ records the remote-denial skip.
   `SO_PEERCRED`, not a mock. Windows same-SID/token behavior came from native
   named-pipe tests.
 - **Configured but not proven:** Windows remote-client rejection flag.
+- **Post-review Windows robustness coverage:** pending overlapped-I/O
+  cancellation/completion draining and restored-thread-context verification
+  before unlocking are covered by
+  `TestWindowsOverlappedReadTimeoutWaitsForCancellation` and
+  `TestWindowsRestorationIsVerifiedBeforeThreadUnlock`, respectively. Both
+  passed in final PR-head run 41337784450 and merged-main run 41338072128.
+- **Potential unbounded wait:** after cancellation, the Windows implementation
+  waits for terminal I/O completion without a second deadline before releasing
+  operation resources. This avoids releasing outstanding I/O state but may
+  wait indefinitely if completion never arrives.
 - **Not implemented or tested:** production IPC transport, production account
   enrollment/lifecycle, separate Windows SID denial, Windows remote-host
   denial, combined IPC+mTLS authentication, executable integrity or process
@@ -213,10 +236,13 @@ native experiment results and does not change ADR 0002's status.
 
 ## Evidence references
 
-- [Core PR A experiment README at current head](https://github.com/kredoxi/kredoxi/blob/9b201887eb75c4b85eafc0ed86e8c2f077655859/experiments/ipc/README.md)
-- [Core Linux tests at current head](https://github.com/kredoxi/kredoxi/blob/9b201887eb75c4b85eafc0ed86e8c2f077655859/experiments/ipc/ipc_linux_test.go)
-- [Core Windows tests at current head](https://github.com/kredoxi/kredoxi/blob/9b201887eb75c4b85eafc0ed86e8c2f077655859/experiments/ipc/ipc_windows_test.go)
-- [Core common experiment tests at current head](https://github.com/kredoxi/kredoxi/blob/9b201887eb75c4b85eafc0ed86e8c2f077655859/experiments/ipc/experiment_test.go)
-- [Current-head Core CI run 41329564731](https://github.com/kredoxi/kredoxi/actions/runs/41329564731)
-- [Detailed native Core CI run 41329082490](https://github.com/kredoxi/kredoxi/actions/runs/41329082490)
+- [Core experiment README at merged main revision](https://github.com/kredoxi/kredoxi/blob/0c465c56a6732265bdad8ec3eba143a11b2a9895/experiments/ipc/README.md)
+- [Core Linux tests at merged main revision](https://github.com/kredoxi/kredoxi/blob/0c465c56a6732265bdad8ec3eba143a11b2a9895/experiments/ipc/ipc_linux_test.go)
+- [Core Windows tests at merged main revision](https://github.com/kredoxi/kredoxi/blob/0c465c56a6732265bdad8ec3eba143a11b2a9895/experiments/ipc/ipc_windows_test.go)
+- [Core common experiment tests at merged main revision](https://github.com/kredoxi/kredoxi/blob/0c465c56a6732265bdad8ec3eba143a11b2a9895/experiments/ipc/experiment_test.go)
+- [Windows robustness commit `e4b5484`](https://github.com/kredoxi/kredoxi/commit/e4b5484de99e9789c1dcd634e1e0e3fbedb63ed5)
+- [Final Core PR-head CI run 41337784450](https://github.com/kredoxi/kredoxi/actions/runs/41337784450)
+- [Post-merge Core main CI run 41338072128](https://github.com/kredoxi/kredoxi/actions/runs/41338072128)
+- [Historical Core PR-head CI run 41329564731](https://github.com/kredoxi/kredoxi/actions/runs/41329564731)
+- [Historical detailed Core CI run 41329082490](https://github.com/kredoxi/kredoxi/actions/runs/41329082490)
 - [ADR 0002: native IPC identity evaluation](adr/0002-native-ipc-identity-evaluation.md)

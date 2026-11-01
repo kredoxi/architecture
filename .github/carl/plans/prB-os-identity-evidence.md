@@ -90,3 +90,17 @@ mTLS provides independent protection.
 The measured results and owner decisions are durable evidence, so link the
 report from ADR 0002, test strategy, threat model, and the memory cache. Keep
 the recorded ADR status and production transport unchanged.
+
+## Final integration amendment
+
+Core PR #5 merged at
+`0c465c56a6732265bdad8ec3eba143a11b2a9895`; PR-head tests on
+`0a7ade6282ee5effc33954eee801509fc81d90cb` passed in run 41337784450, and
+default-branch CI on the merge commit passed in run 41338072128. The evidence
+report must retain the earlier test-source revisions/runs while adding this
+verification chain and the Windows regression test names. The owner
+conditionally authorized merging Architecture PR #4 after the refreshed
+report, local validation, required `validate` check, and blocker/protection
+review all pass. Merge only this PR and verify default-branch CI afterward.
+ADR 0002 remains Proposed/deferred/not accepted; production code stays
+unchanged.

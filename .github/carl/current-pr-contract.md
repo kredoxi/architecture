@@ -115,3 +115,29 @@ tests -v` and `python3 scripts/validate_architecture.py` checks with the
 current cARL effective/status/doctor outputs. Run cARL status, doctor, plan,
 effective and trace checks; inspect the final diff and `git diff --check`.
 Do not run Core code locally from this Architecture checkout.
+
+### Owner-authorized final integration amendment
+
+The owner has independently confirmed Core PR #5 merged to Core `main` at
+`0c465c56a6732265bdad8ec3eba143a11b2a9895`, with default-branch CI run
+41338072128 successful. This amendment supersedes the earlier "keep PR open
+and unmerged" instruction only for Architecture PR #4 and only after all of
+these gates pass:
+
+1. Update the report's current-source references to the merged Core revision,
+   retaining historical exact tested revisions and CI provenance.
+2. Verify the final Windows cancellation and impersonation regression names,
+   native PR-head and main-branch results, and remaining skip/limits directly
+   against source and CI.
+3. Keep ADR 0001 Accepted and unchanged, ADR 0002 Proposed/deferred/not
+   accepted, and all production code unchanged.
+4. Re-run cARL diagnostics, all Architecture validation and the required
+   `validate` check on the updated PR head; confirm base freshness, no review
+   blockers and that branch protection permits merge.
+5. Only then merge Architecture PR #4 using a repository-supported protected
+   merge method and verify the resulting merge commit, `main` SHA and
+   default-branch Architecture CI.
+
+This is a narrow, user-authorized merge-stage amendment; it does not revise
+the evidence acceptance criteria or authorize ADR 0002, production changes,
+or other merges.
